@@ -9,6 +9,8 @@ __pycache__/
 dist/
 build/
 *.egg-info/
+*.egg
+.eggs/
 
 # Virtual environments
 venv/
@@ -25,11 +27,25 @@ ruckus_inventory_*.txt
 ap_export_*.csv
 .checkpoint_*.json
 
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+
 # IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+.vim/
+
+# Jupyter Notebook
+.ipynb_checkpoints
 
 # OS-specific files
 .DS_Store
