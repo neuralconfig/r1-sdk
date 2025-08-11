@@ -22,6 +22,8 @@ CLAUDE.md
 
 # Temporary output files
 ruckus_inventory_*.txt
+ap_export_*.csv
+.checkpoint_*.json
 
 # IDE files
 .vscode/
