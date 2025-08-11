@@ -73,6 +73,8 @@ class RuckusOneClient:
         self.vlans = None
         self.clients = None
         self.dpsk = None
+        self.identity_groups = None
+        self.identities = None
         
         # Automatically initialize the modules
         self._init_modules()
@@ -298,6 +300,8 @@ class RuckusOneClient:
         from .modules.wlans import WLANs
         from .modules.vlans import VLANs
         from .modules.dpsk import DPSK
+        from .modules.identity_groups import IdentityGroups
+        from .modules.identities import Identities
         
         # Initialize modules (they will register themselves with the client)
         Venues(self)
@@ -306,6 +310,8 @@ class RuckusOneClient:
         WLANs(self)
         VLANs(self)
         DPSK(self)
+        IdentityGroups(self)
+        Identities(self)
         
         # Log module initialization
         logger.debug("All API modules initialized successfully")

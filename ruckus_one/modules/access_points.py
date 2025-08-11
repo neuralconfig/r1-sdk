@@ -149,7 +149,11 @@ class AccessPoints:
             ResourceNotFoundError: If the AP does not exist
         """
         try:
-            return self.client.post(f"/venues/{venue_id}/aps/{serial_number}/reboot")
+            # Use systemCommands endpoint with REBOOT type (requires PATCH method)
+            data = {
+                "type": "REBOOT"
+            }
+            return self.client.patch(f"/venues/{venue_id}/aps/{serial_number}/systemCommands", data=data)
         except ResourceNotFoundError:
             raise ResourceNotFoundError(
                 message=f"AP with serial number {serial_number} not found in venue {venue_id}"
