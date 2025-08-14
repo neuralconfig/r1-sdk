@@ -84,43 +84,43 @@ def main():
     if wlans:
         print(list(wlans[0].keys()))
     
-    # Specifically look for venue "Home" (assume ID is known)
-    home_venue_id = "b743f1b8873943979cc24baa95c53e83"  # Home venue ID
-    print(f"\nChecking for WLANs in Home venue (ID: {home_venue_id}):")
+    # Example: look for WLANs in a specific venue (replace with actual venue ID)
+    example_venue_id = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"  # Replace with your venue ID
+    print(f"\nChecking for WLANs in example venue (ID: {example_venue_id}):")
     
-    home_wlans_count = 0
+    venue_wlans_count = 0
     
-    print("\nWLANs with venueId matching Home:")
+    print("\nWLANs with venueId matching example venue:")
     for wlan in wlans:
-        if wlan.get('venueId') == home_venue_id:
-            home_wlans_count += 1
+        if wlan.get('venueId') == example_venue_id:
+            venue_wlans_count += 1
             print(f"  {wlan.get('name')} (SSID: {wlan.get('ssid')})")
     
-    print(f"Count: {home_wlans_count}")
+    print(f"Count: {venue_wlans_count}")
     
-    home_wlans_count = 0
+    venue_wlans_count = 0
     print("\nWLANs with venues array containing Home:")
     for wlan in wlans:
         venues = wlan.get('venues', [])
         for venue in venues:
             if venue.get('id') == home_venue_id:
-                home_wlans_count += 1
+                venue_wlans_count += 1
                 print(f"  {wlan.get('name')} (SSID: {wlan.get('ssid')})")
                 break
     
-    print(f"Count: {home_wlans_count}")
+    print(f"Count: {venue_wlans_count}")
     
-    home_wlans_count = 0
+    venue_wlans_count = 0
     print("\nWLANs with deployments containing Home:")
     for wlan in wlans:
         deployments = wlan.get('deployments', [])
         for deployment in deployments:
             if deployment.get('id') == home_venue_id:
-                home_wlans_count += 1
+                venue_wlans_count += 1
                 print(f"  {wlan.get('name')} (SSID: {wlan.get('ssid')}) - Deployment type: {deployment.get('type')}")
                 break
     
-    print(f"Count: {home_wlans_count}")
+    print(f"Count: {venue_wlans_count}")
     
     print("\nChecking venue AP groups:")
     # Get venue AP groups for Home venue

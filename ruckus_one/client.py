@@ -75,6 +75,7 @@ class RuckusOneClient:
         self.dpsk = None
         self.identity_groups = None
         self.identities = None
+        self.l3acl = None
         
         # Automatically initialize the modules
         self._init_modules()
@@ -302,6 +303,7 @@ class RuckusOneClient:
         from .modules.dpsk import DPSK
         from .modules.identity_groups import IdentityGroups
         from .modules.identities import Identities
+        from .modules.l3acl import L3ACL
         
         # Initialize modules (they will register themselves with the client)
         Venues(self)
@@ -312,6 +314,7 @@ class RuckusOneClient:
         DPSK(self)
         IdentityGroups(self)
         Identities(self)
+        L3ACL(self)
         
         # Log module initialization
         logger.debug("All API modules initialized successfully")

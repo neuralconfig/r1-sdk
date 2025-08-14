@@ -213,7 +213,7 @@ Waiting 60s before next AP: .........10.........20.........30.........40........
 
 #### Progress Indicators
 ```
-[15/100] (15.0%) Processing AP: Office-R770-405 (SN: 502339500405)
+[15/100] (15.0%) Processing AP: Office-R770-001 (SN: 123456789012)
 ```
 
 #### Summary Tables
@@ -222,16 +222,16 @@ Waiting 60s before next AP: .........10.........20.........30.........40........
 ```
 AP Name                        Serial Number        Venue ID                            
 --------------------------------------------------------------------------------
-Office-R770-405                502339500405         b743f1b8873943979cc24baa95c53e83    
-Bedroom-R770-091               172439001091         b743f1b8873943979cc24baa95c53e83    
+Office-R770-001                123456789012         xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx    
+Bedroom-R770-002               987654321098         xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx    
 ```
 
 **Skipped APs (Not Operational):**
 ```
 AP Name                   Serial Number        Status                             
 --------------------------------------------------------------------------------
-T350-2                    162102005036         3_04_DisconnectedFromCloud         
-T350-1                    922372002588         3_04_DisconnectedFromCloud         
+T350-001                  555666777888         3_04_DisconnectedFromCloud         
+T350-002                  444555666777         3_04_DisconnectedFromCloud         
 ```
 
 ## Examples
