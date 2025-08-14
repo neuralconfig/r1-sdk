@@ -779,7 +779,7 @@ python3 ap_cli_manager.py --config config.ini --export
 # 2. Create commands CSV file
 echo "command,filter" > commands.csv
 echo "get vxlan info,Configured RVTEP List" >> commands.csv
-echo "show version," >> commands.csv
+echo "get version," >> commands.csv
 
 # 3. Edit the AP CSV to add SSH passwords per venue
 
