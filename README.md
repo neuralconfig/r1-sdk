@@ -20,6 +20,7 @@ A comprehensive Python SDK for interacting with the RUCKUS One (R1) network mana
 - [CSV Import Tool](#csv-import-tool)
 - [CLI Tools](#cli-tools)
 - [AP Reboot Manager](#ap-reboot-manager)
+- [AP CLI Manager](#ap-cli-manager)
 - [Utility Scripts](#utility-scripts)
 - [Testing](#testing)
 - [Troubleshooting](#troubleshooting)
@@ -39,6 +40,7 @@ A comprehensive Python SDK for interacting with the RUCKUS One (R1) network mana
 - **OAuth2 Authentication**: Automatic token management and refresh
 - **CLI Tools**: Both command-line and interactive modes
 - **CSV Import**: Bulk L3 ACL policy creation from CSV files
+- **AP Management Tools**: Advanced AP reboot and CLI command execution utilities
 - **Error Handling**: Custom exceptions with detailed error information
 - **Logging Support**: Configurable logging for debugging and monitoring
 - **Inventory Reporting**: Generate comprehensive network inventory reports
@@ -59,6 +61,7 @@ This SDK is **actively maintained** and provides solid coverage of core RUCKUS O
 - **DPSK Management**: Dynamic Pre-Shared Key management
 - **CLI Tools**: Both command-line and interactive interfaces
 - **AP Reboot Manager**: Advanced batch AP management with safety features
+- **AP CLI Manager**: SSH-based CLI command execution across multiple APs with filtering
 
 ### 🔄 Partial Implementation
 - **Advanced AP Configuration**: Basic operations available, advanced configuration pending
@@ -750,6 +753,287 @@ python3 ap_reboot_manager.py --config config.ini --import reboot_list.csv --dela
 # Step 5: If interrupted, resume
 python3 ap_reboot_manager.py --config config.ini --import reboot_list.csv --resume --delay 90 --log-file reboot_operation.log
 ```
+
+## AP CLI Manager
+
+The SDK includes a powerful AP CLI Manager tool for executing CLI commands across multiple Access Points via SSH. This tool provides comprehensive command execution capabilities with filtering, output analysis, and progress tracking.
+
+### Features
+
+- **Export**: Generate CSV inventory of all Access Points with SSH password support
+- **Command Execution**: Execute CLI commands on multiple APs via SSH
+- **Output Filtering**: Grep-like filtering of command output
+- **Multiple Output Formats**: Save results to text and CSV files
+- **Simulation Mode**: Preview operations without making actual changes
+- **Resume Capability**: Continue interrupted operations from checkpoints
+- **Per-venue Passwords**: Support different SSH passwords per venue
+- **Progress Tracking**: Visual progress bars with granular status updates
+- **Comprehensive Reporting**: Analysis of command outputs with pattern recognition
+
+### Quick Start
+
+```bash
+# 1. Export all APs to CSV (includes ssh_password column for editing)
+python3 ap_cli_manager.py --config config.ini --export
+
+# 2. Create commands CSV file
+echo "command,filter" > commands.csv
+echo "get vxlan info,Configured RVTEP List" >> commands.csv
+echo "show version," >> commands.csv
+
+# 3. Edit the AP CSV to add SSH passwords per venue
+
+# 4. Simulate the command execution (dry run)
+python3 ap_cli_manager.py --config config.ini --import-aps ap_export_20250814_123456.csv --import-commands commands.csv --simulate
+
+# 5. Execute the actual commands
+python3 ap_cli_manager.py --config config.ini --import-aps ap_export_20250814_123456.csv --import-commands commands.csv --output-text results.txt
+```
+
+### Export Mode
+
+Export all Access Points from your tenant with SSH password support:
+
+```bash
+# Export with default filename (includes timestamp)
+python3 ap_cli_manager.py --config config.ini --export
+
+# Export with custom filename
+python3 ap_cli_manager.py --config config.ini --export --output my_ap_inventory.csv
+```
+
+The exported CSV includes all AP details plus an empty `ssh_password` column for you to fill in with per-venue passwords.
+
+### CSV File Formats
+
+#### AP CSV Format
+```csv
+serial_number,mac_address,model,firmware_version,name,venue_id,venue_name,ip_address,status,ssh_password
+502339500405,CC:1B:5A:33:C8:60,R770,7.1.1.520.830,Office-R770-405,b743f1b8873943979cc24baa95c53e83,Home,192.168.37.118,2_00_Operational,mypassword123
+```
+
+#### Commands CSV Format
+```csv
+command,filter
+get vxlan info,Configured RVTEP List
+show version,
+get wlaninfo,enabled
+show system-info,Memory
+```
+
+The filter column is optional - leave empty to get full command output, or specify text to grep for in the output.
+
+### Command Execution Modes
+
+#### Simulation Mode (Safe Testing)
+```bash
+# Test your commands without executing them
+python3 ap_cli_manager.py --config config.ini --import-aps aps.csv --import-commands commands.csv --simulate
+```
+
+#### Standard Execution
+```bash
+# Execute commands with default settings (no delay)
+python3 ap_cli_manager.py --config config.ini --import-aps aps.csv --import-commands commands.csv
+
+# Execute with delay between APs
+python3 ap_cli_manager.py --config config.ini --import-aps aps.csv --import-commands commands.csv --delay 5
+```
+
+#### With Output Files
+```bash
+# Save detailed output to text file
+python3 ap_cli_manager.py --config config.ini --import-aps aps.csv --import-commands commands.csv --output-text detailed_results.txt
+
+# Save tabular results to CSV
+python3 ap_cli_manager.py --config config.ini --import-aps aps.csv --import-commands commands.csv --output-csv command_results.csv
+
+# Export successful and failed APs separately
+python3 ap_cli_manager.py --config config.ini --import-aps aps.csv --import-commands commands.csv --export-success-csv successful_aps.csv --export-failed-csv failed_aps.csv
+```
+
+### Advanced Options
+
+#### Include Non-Operational APs
+```bash
+# Also attempt to connect to non-operational APs
+python3 ap_cli_manager.py --config config.ini --import-aps aps.csv --import-commands commands.csv --include-non-operational
+```
+
+#### SSH Connection Options
+```bash
+# Custom SSH timeout and retry settings
+python3 ap_cli_manager.py --config config.ini --import-aps aps.csv --import-commands commands.csv --timeout 45 --ssh-retries 3
+```
+
+#### Resume Interrupted Operations
+```bash
+# Resume from last checkpoint
+python3 ap_cli_manager.py --config config.ini --import-aps aps.csv --import-commands commands.csv --resume
+
+# Custom checkpoint frequency
+python3 ap_cli_manager.py --config config.ini --import-aps aps.csv --import-commands commands.csv --batch-size 25
+```
+
+#### Force Large Operations
+```bash
+# Required for operations with 100+ APs
+python3 ap_cli_manager.py --config config.ini --import-aps aps.csv --import-commands commands.csv --force
+```
+
+### Password Management
+
+The AP CLI Manager supports flexible password management:
+
+1. **Per-AP Passwords**: Add passwords to the `ssh_password` column in the AP CSV
+2. **Default Fallback**: Use `--password` argument for APs without CSV passwords
+3. **Mixed Mode**: Some APs can have CSV passwords, others use the default
+
+```bash
+# Use default password for all operational APs without CSV passwords
+python3 ap_cli_manager.py --config config.ini --import-aps aps.csv --import-commands commands.csv --password "defaultpass123"
+
+# If all APs have passwords in CSV, no --password argument needed
+python3 ap_cli_manager.py --config config.ini --import-aps aps.csv --import-commands commands.csv
+```
+
+### Output Analysis
+
+The tool provides comprehensive analysis of command outputs:
+
+- **Connection Statistics**: Success/failure rates and timing
+- **Command Execution Stats**: Per-command success rates
+- **Response Pattern Analysis**: Groups APs by similar command outputs
+- **Unique Response Distribution**: Shows how many APs returned each type of response
+
+### Command Line Options
+
+```bash
+# Required
+--config CONFIG              # Path to credentials configuration file
+
+# Mode Selection (choose one)
+--export                     # Export all APs to CSV
+--import-aps AP_FILE         # Import AP list CSV file
+--import-commands CMD_FILE   # Import commands CSV file
+
+# Authentication
+--password PASSWORD          # Default SSH password for operational APs (username is always "admin")
+
+# Operation Options
+--simulate                   # Dry run mode - no actual command execution
+--delay SECONDS             # Delay between APs in seconds (default: 0)
+--timeout SECONDS           # SSH connection timeout (default: 30)
+--ssh-retries COUNT         # Number of SSH connection attempts per AP (default: 2)
+--include-non-operational   # Also attempt to connect to non-operational APs
+--force                     # Required for operations with 100+ APs
+
+# Output Options
+--output FILENAME           # Custom export filename
+--output-text FILENAME      # Save detailed output to text file
+--output-csv FILENAME       # Save tabular results to CSV file
+--export-success-csv FILE   # Export successful APs to CSV
+--export-failed-csv FILE    # Export failed APs to CSV
+
+# Recovery Options  
+--resume                    # Resume from last checkpoint
+--batch-size SIZE           # Checkpoint frequency (default: 50)
+
+# Logging Options
+--log-level LEVEL          # Logging verbosity (DEBUG, INFO, WARNING, ERROR)
+--log-file FILENAME        # Write logs to file
+```
+
+### Example Workflows
+
+#### Network Audit Commands
+```bash
+# Create audit commands
+cat > audit_commands.csv << EOF
+command,filter
+show version,
+get system-info,
+get wlaninfo,
+show ap-uptime,
+EOF
+
+# Execute audit
+python3 ap_cli_manager.py --config config.ini --import-aps aps.csv --import-commands audit_commands.csv --output-text network_audit.txt
+```
+
+#### Configuration Verification
+```bash
+# Verify VXLAN configuration across APs
+cat > vxlan_check.csv << EOF
+command,filter
+get vxlan info,Configured RVTEP List
+get vxlan status,VXLAN Status
+EOF
+
+python3 ap_cli_manager.py --config config.ini --import-aps aps.csv --import-commands vxlan_check.csv --output-csv vxlan_status.csv
+```
+
+#### Troubleshooting Workflow
+```bash
+# Gather troubleshooting information
+cat > troubleshoot.csv << EOF
+command,filter
+show system-info,Memory
+get ap-uptime,
+show client-count,
+get radio-stats,
+EOF
+
+# Run with verbose logging
+python3 ap_cli_manager.py --config config.ini --import-aps problem_aps.csv --import-commands troubleshoot.csv --output-text troubleshoot_results.txt --log-level DEBUG --log-file troubleshoot.log
+```
+
+### Best Practices
+
+1. **Always export first**: Get current AP inventory with proper IP addresses
+2. **Use simulation mode**: Test your commands and CSV files before execution
+3. **Manage passwords securely**: Use per-venue passwords in CSV, avoid hardcoded defaults
+4. **Set appropriate timeouts**: Allow sufficient time for command execution (30+ seconds)
+5. **Monitor operations**: Use output files and logging for audit trails
+6. **Start small**: Test with a few APs before running large operations
+7. **Use filtering**: Leverage the filter column to extract specific information
+8. **Schedule during maintenance**: Avoid SSH connections during peak usage
+
+### Progress Display
+
+The tool provides clean, single-line progress updates for each AP:
+
+```
+[1/3] Home - Office-R770-405 (SN: 502339500405) [██████████] 100% Complete
+[2/3] Home - Bedroom-R770-091 (SN: 172439001091) [██████████] 100% Complete
+[3/3] Home - Bonus-R770-881 (SN: 502339500881) [██████████] 100% Complete
+```
+
+Progress shows:
+- AP number and total count
+- Venue and AP name
+- Serial number for identification  
+- Progress bar with percentage
+- Current status (Starting, Connecting, Connected, Executing, Complete, Failed)
+
+### Safety Features
+
+- **Simulation Mode**: Test operations without making changes
+- **Operational AP Priority**: Processes operational APs first
+- **SSH Retry Logic**: Automatic retry with exponential backoff
+- **Checkpoint System**: Resume capability for interrupted operations
+- **Input Validation**: Validates CSV files and IP addresses
+- **Confirmation Prompts**: Confirms large operations before execution
+- **Comprehensive Logging**: Detailed logs for troubleshooting and audit
+
+### Integration with AP Reboot Manager
+
+The AP CLI Manager complements the AP Reboot Manager tool:
+
+- **Same AP CSV Format**: Export from either tool, use in both
+- **Consistent Authentication**: Same credential and configuration management
+- **Combined Workflows**: Use CLI Manager for diagnostics, Reboot Manager for remediation
+- **Shared Best Practices**: Similar safety features and operational patterns
 
 ## Utility Scripts
 
