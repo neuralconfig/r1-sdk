@@ -15,7 +15,7 @@ setup(
     description="Python SDK for the RUCKUS One (R1) network management system",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/ruckus-one-sdk",
+    url="https://github.com/neuralconfig/r1-api",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 3 - Alpha",
