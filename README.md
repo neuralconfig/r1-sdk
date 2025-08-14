@@ -6,7 +6,7 @@ A comprehensive Python SDK for interacting with the RUCKUS One (R1) network mana
 > 
 > This SDK is currently under active development and does not provide 100% coverage of all RUCKUS One APIs. While it covers the most commonly used functionality for venues, access points, switches, WLANs, VLANs, and L3 ACL management, some advanced features may not be available yet.
 > 
-> **Experiencing issues?** Please [submit an issue on GitHub](https://github.com/yourusername/ruckus-one-sdk/issues) with detailed information about your use case and any problems encountered. Your feedback helps improve the SDK!
+> **Experiencing issues?** Please [submit an issue on GitHub](https://github.com/neuralconfig/r1-api/issues) with detailed information about your use case and any problems encountered. Your feedback helps improve the SDK!
 
 ## Table of Contents
 
@@ -91,8 +91,8 @@ The SDK prioritizes reliability and ease of use over complete feature coverage. 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/ruckus-one-sdk.git
-   cd ruckus-one-sdk
+   git clone https://github.com/neuralconfig/r1-api.git
+   cd r1-api
    ```
 
 2. Create and activate a virtual environment:
@@ -1686,7 +1686,7 @@ client = RuckusOneClient(...)
 
 If you encounter issues not covered here:
 
-1. **Check existing issues**: Search [GitHub Issues](https://github.com/yourusername/ruckus-one-sdk/issues)
+1. **Check existing issues**: Search [GitHub Issues](https://github.com/neuralconfig/r1-api/issues)
 2. **Enable debug logging**: Include debug output in issue reports
 3. **Provide context**: Include code samples, error messages, and environment details
 4. **Test with minimal example**: Create a simple reproduction case
@@ -1775,8 +1775,8 @@ Contributions are welcome! Please follow these guidelines:
 
 ```bash
 # Clone your fork
-git clone https://github.com/yourusername/ruckus-one-sdk.git
-cd ruckus-one-sdk
+git clone https://github.com/neuralconfig/r1-api.git
+cd r1-api
 
 # Create development environment
 python3 -m venv venv
@@ -1807,7 +1807,7 @@ We're committed to helping you successfully use the RUCKUS One Python SDK. Here'
 ### Before Creating an Issue
 
 1. **Check the Documentation**: Review this README and the [Troubleshooting](#troubleshooting) section
-2. **Search Existing Issues**: Look through [existing issues](https://github.com/yourusername/ruckus-one-sdk/issues) for similar problems
+2. **Search Existing Issues**: Look through [existing issues](https://github.com/neuralconfig/r1-api/issues) for similar problems
 3. **Test with Latest Version**: Ensure you're using the latest SDK version
 4. **Check Project Status**: Review the [Known Limitations](#known-limitations) section
 

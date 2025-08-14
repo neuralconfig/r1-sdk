@@ -16,8 +16,8 @@ Before you begin testing, you'll need:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/ruckus-one-sdk.git
-   cd ruckus-one-sdk
+   git clone https://github.com/neuralconfig/r1-api.git
+   cd r1-api
    ```
 
 2. Create a virtual environment:
