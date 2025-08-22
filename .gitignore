@@ -20,12 +20,15 @@ ENV/
 # Environment configuration
 .env
 config.ini
+readonly.ini
 CLAUDE.md
 
 # Temporary output files
 ruckus_inventory_*.txt
 ap_export_*.csv
 .checkpoint_*.json
+ap_logs_response_*.json
+ap_support_logs_*/
 
 # Testing
 .pytest_cache/
@@ -54,3 +57,7 @@ Thumbs.db
 # API documentation working files
 APIdocs/
 screenshots/
+reference-code/
+
+# Data directories
+data/
