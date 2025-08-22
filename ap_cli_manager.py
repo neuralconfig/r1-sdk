@@ -27,6 +27,8 @@ import re
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from queue import Queue
 
 # Add the parent directory to the system path to import the ruckus_one package
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -639,7 +641,9 @@ def execute_commands_on_aps(
     resume: bool = False,
     batch_size: int = 50,
     ssh_retries: int = 2,
-    include_non_operational: bool = False
+    include_non_operational: bool = False,
+    parallel: int = 1,
+    parallel_mode: str = 'auto'
 ) -> Dict[str, Any]:
     """
     Execute commands on a list of APs.
@@ -656,6 +660,8 @@ def execute_commands_on_aps(
         batch_size: Operations before checkpoint
         ssh_retries: Number of SSH connection attempts
         include_non_operational: Whether to try non-operational APs
+        parallel: Number of parallel SSH connections (1 for sequential)
+        parallel_mode: Progress display mode ('auto', 'simple', 'multi')
         
     Returns:
         Dictionary with execution results and statistics
@@ -691,6 +697,30 @@ def execute_commands_on_aps(
     # Update totals
     total_aps = len(aps_to_process)
     total_operations = total_aps * total_commands
+    
+    # Use parallel processing if requested and supported
+    if parallel > 1:
+        if resume:
+            logger.warning("Resume mode not supported with parallel processing, using sequential mode")
+            parallel = 1
+        else:
+            # Log this BEFORE creating the processor to avoid display interference
+            print(f"Using parallel processing with {parallel} concurrent SSH connections")
+            print()  # Add spacing before display starts
+            
+            processor = ParallelAPProcessor(max_workers=parallel, progress_mode=parallel_mode)
+            return processor.execute_commands_parallel(
+                ap_list=aps_to_process,
+                commands=commands,
+                default_password=default_password,
+                timeout=timeout,
+                ssh_retries=ssh_retries,
+                simulate=simulate,
+                delay=delay
+            )
+    
+    # Sequential processing (original logic)
+    logger.info("Using sequential processing (1 AP at a time)")
     
     # Safety checks
     if total_aps > 100 and not force:
@@ -938,10 +968,10 @@ def execute_commands_on_aps(
     }
 
 
-def generate_comprehensive_report(results: List[Dict[str, Any]], stats: Dict[str, Any], 
-                                commands: List[Dict[str, str]], text_output_file: Optional[str] = None) -> str:
+def generate_concise_report(results: List[Dict[str, Any]], stats: Dict[str, Any], 
+                           commands: List[Dict[str, str]], text_output_file: Optional[str] = None) -> str:
     """
-    Generate a comprehensive report with statistics and output analysis.
+    Generate a concise execution summary report.
     
     Args:
         results: List of command execution results
@@ -955,35 +985,139 @@ def generate_comprehensive_report(results: List[Dict[str, Any]], stats: Dict[str
     report_lines = []
     
     # Header
-    report_lines.append("\n" + "="*80)
-    report_lines.append("COMPREHENSIVE ANALYSIS REPORT")
-    report_lines.append("="*80)
+    report_lines.append("EXECUTION SUMMARY")
+    report_lines.append("="*50)
     
-    # Success percentage statistics
+    # Overall statistics
     total_aps = stats['total_aps']
     successful_connections = stats['successful_connections']
-    successful_percentage = (successful_connections / total_aps * 100) if total_aps > 0 else 0
+    success_percentage = (successful_connections / total_aps * 100) if total_aps > 0 else 0
+    
+    total_commands = stats['total_commands_executed'] + stats['total_commands_failed']
+    cmd_success_percentage = (stats['total_commands_executed'] / total_commands * 100) if total_commands > 0 else 0
+    
+    report_lines.append(f"APs: {successful_connections}/{total_aps} successful ({success_percentage:.1f}%)")
+    report_lines.append(f"Commands: {stats['total_commands_executed']}/{total_commands} successful ({cmd_success_percentage:.1f}%)")
+    
+    # Command summary - only show interesting details
+    if len(commands) > 1:
+        report_lines.append(f"\nCOMMAND SUMMARY ({len(commands)} commands):")
+        
+        issues_found = False
+        for cmd in commands:
+            command_name = cmd['command']
+            
+            # Count successes/failures for this command
+            cmd_successes = 0
+            cmd_failures = 0
+            unique_responses = set()
+            
+            for result in results:
+                for cmd_result in result.get('command_results', []):
+                    if cmd_result.get('command') == command_name:
+                        if cmd_result.get('error'):
+                            cmd_failures += 1
+                        else:
+                            cmd_successes += 1
+                            # Track unique responses for variety indication
+                            output = cmd_result.get('filtered_output', cmd_result.get('output', ''))
+                            if output:
+                                unique_responses.add(output.strip()[:50])  # First 50 chars for uniqueness
+            
+            total_cmd = cmd_successes + cmd_failures
+            if total_cmd > 0:
+                cmd_pct = (cmd_successes / total_cmd * 100)
+                
+                # Only show details if there are issues or interesting variations
+                if cmd_failures > 0 or len(unique_responses) > 3:
+                    status = f"{cmd_successes}/{total_cmd} ({cmd_pct:.0f}%)"
+                    variations = f", {len(unique_responses)} unique responses" if len(unique_responses) > 1 else ""
+                    report_lines.append(f"  • {command_name}: {status}{variations}")
+                    issues_found = True
+        
+        if not issues_found:
+            report_lines.append("  ✓ All commands executed successfully with consistent results")
+    
+    # Show failures if any
+    if stats['failed_connections'] > 0:
+        report_lines.append(f"\nFAILURES ({stats['failed_connections']} APs):")
+        failed_aps = set()
+        for result in results:
+            for cmd_result in result.get('command_results', []):
+                if cmd_result.get('error') and 'Failed to connect' in cmd_result['error']:
+                    ap_name = result.get('ap_info', {}).get('name', 'Unknown')
+                    failed_aps.add(ap_name)
+        
+        if failed_aps:
+            ap_list = ", ".join(list(failed_aps)[:5])
+            if len(failed_aps) > 5:
+                ap_list += f" ... and {len(failed_aps) - 5} more"
+            report_lines.append(f"  Connection failures: {ap_list}")
+    
+    report_lines.append("="*50)
+    
+    # Join all lines
+    report_text = "\n".join(report_lines)
+    
+    # Print to console
+    print(report_text)
+    
+    # Append to text file if specified
+    if text_output_file:
+        try:
+            with open(text_output_file, 'a') as f:
+                f.write("\n" + report_text + "\n")
+            logger.info(f"Summary report appended to {text_output_file}")
+        except Exception as e:
+            logger.error(f"Failed to append report to {text_output_file}: {e}")
+    
+    return report_text
+
+
+def generate_detailed_report(results: List[Dict[str, Any]], stats: Dict[str, Any], 
+                            commands: List[Dict[str, str]], text_output_file: Optional[str] = None) -> str:
+    """
+    Generate a detailed analysis report with full command output patterns.
+    
+    Args:
+        results: List of command execution results
+        stats: Execution statistics
+        commands: List of commands that were executed
+        text_output_file: Optional text file to append the report to
+        
+    Returns:
+        Report string
+    """
+    report_lines = []
+    
+    # Header
+    report_lines.append("DETAILED ANALYSIS REPORT")
+    report_lines.append("="*80)
+    
+    # Overall statistics
+    total_aps = stats['total_aps']
+    successful_connections = stats['successful_connections']
+    success_percentage = (successful_connections / total_aps * 100) if total_aps > 0 else 0
+    
+    total_commands = stats['total_commands_executed'] + stats['total_commands_failed']
+    cmd_success_percentage = (stats['total_commands_executed'] / total_commands * 100) if total_commands > 0 else 0
     
     report_lines.append(f"\nCONNECTION STATISTICS:")
     report_lines.append(f"   * Total APs processed: {total_aps}")
-    report_lines.append(f"   * Successful connections: {successful_connections} ({successful_percentage:.1f}%)")
-    report_lines.append(f"   * Failed connections: {stats['failed_connections']} ({100-successful_percentage:.1f}%)")
-    
-    # Command execution statistics
-    total_commands_attempted = stats['total_commands_executed'] + stats['total_commands_failed']
-    command_success_percentage = (stats['total_commands_executed'] / total_commands_attempted * 100) if total_commands_attempted > 0 else 0
+    report_lines.append(f"   * Successful connections: {successful_connections} ({success_percentage:.1f}%)")
+    report_lines.append(f"   * Failed connections: {stats['failed_connections']} ({100-success_percentage:.1f}%)")
     
     report_lines.append(f"\nCOMMAND EXECUTION STATISTICS:")
-    report_lines.append(f"   * Total commands attempted: {total_commands_attempted}")
-    report_lines.append(f"   * Successful commands: {stats['total_commands_executed']} ({command_success_percentage:.1f}%)")
-    report_lines.append(f"   * Failed commands: {stats['total_commands_failed']} ({100-command_success_percentage:.1f}%)")
+    report_lines.append(f"   * Total commands attempted: {total_commands}")
+    report_lines.append(f"   * Successful commands: {stats['total_commands_executed']} ({cmd_success_percentage:.1f}%)")
+    report_lines.append(f"   * Failed commands: {stats['total_commands_failed']} ({100-cmd_success_percentage:.1f}%)")
     
-    # Analyze command outputs for each command
+    # Detailed analysis for each command
     for cmd in commands:
         command_name = cmd['command']
         filter_text = cmd.get('filter', '')
         
-        report_lines.append(f"\nANALYSIS FOR COMMAND: '{command_name}'")
+        report_lines.append(f"\nCOMMAND ANALYSIS: '{command_name}'")
         if filter_text:
             report_lines.append(f"   Filter: '{filter_text}'")
         
@@ -1003,9 +1137,9 @@ def generate_comprehensive_report(results: List[Dict[str, Any]], stats: Dict[str
                         if not output.strip():
                             output_key = "[No output]"
                         else:
-                            # Truncate long outputs for grouping
-                            output_key = output.strip()[:200]
-                            if len(output.strip()) > 200:
+                            # Truncate very long outputs but keep more detail than concise report
+                            output_key = output.strip()[:500]
+                            if len(output.strip()) > 500:
                                 output_key += "... [truncated]"
                     
                     if output_key not in command_outputs:
@@ -1021,24 +1155,29 @@ def generate_comprehensive_report(results: List[Dict[str, Any]], stats: Dict[str
         
         report_lines.append(f"   Found {len(sorted_outputs)} unique response patterns:")
         
-        for i, (output, ap_list) in enumerate(sorted_outputs[:10], 1):  # Show top 10 patterns
+        # Show all patterns (not limited like concise report)
+        for i, (output, ap_list) in enumerate(sorted_outputs, 1):
             percentage = len(ap_list) / len([r for r in results if any(cr.get('command') == command_name for cr in r.get('command_results', []))]) * 100
             report_lines.append(f"\n   {i}. Response pattern ({len(ap_list)} APs, {percentage:.1f}%):")
             
-            # Show first few lines of output
-            output_preview = output.split('\n')[0] if output else "[Empty]"
-            if len(output_preview) > 80:
-                output_preview = output_preview[:80] + "..."
-            report_lines.append(f"      Preview: {output_preview}")
+            # Show output with more detail
+            output_lines = output.split('\n')
+            if len(output_lines) > 1:
+                report_lines.append(f"      Preview: {output_lines[0]}")
+                if len(output_lines) > 2:
+                    report_lines.append(f"               {output_lines[1]}")
+                    if len(output_lines) > 3:
+                        report_lines.append(f"               ... ({len(output_lines) - 2} more lines)")
+            else:
+                preview = output[:120] + "..." if len(output) > 120 else output
+                report_lines.append(f"      Preview: {preview}")
             
-            # Show AP names (limit to first 5)
-            ap_names_str = ", ".join(ap_list[:5])
-            if len(ap_list) > 5:
-                ap_names_str += f" ... and {len(ap_list) - 5} more"
-            report_lines.append(f"      APs: {ap_names_str}")
-        
-        if len(sorted_outputs) > 10:
-            report_lines.append(f"   ... and {len(sorted_outputs) - 10} more response patterns")
+            # Show all AP names
+            if len(ap_list) <= 10:
+                report_lines.append(f"      APs: {', '.join(ap_list)}")
+            else:
+                first_ten = ', '.join(ap_list[:10])
+                report_lines.append(f"      APs: {first_ten} ... and {len(ap_list) - 10} more")
     
     report_lines.append("\n" + "="*80)
     
@@ -1052,12 +1191,549 @@ def generate_comprehensive_report(results: List[Dict[str, Any]], stats: Dict[str
     if text_output_file:
         try:
             with open(text_output_file, 'a') as f:
-                f.write(report_text + "\n")
-            logger.info(f"Comprehensive report appended to {text_output_file}")
+                f.write("\n" + report_text + "\n")
+            logger.info(f"Detailed report appended to {text_output_file}")
         except Exception as e:
             logger.error(f"Failed to append report to {text_output_file}: {e}")
     
     return report_text
+
+
+class MultiLineProgressDisplay:
+    """Manages multi-line terminal progress display for parallel AP processing."""
+    
+    def __init__(self, max_parallel: int, total_aps: int, mode: str = 'auto'):
+        """
+        Initialize multi-line progress display.
+        
+        Args:
+            max_parallel: Maximum number of parallel connections
+            total_aps: Total number of APs to process
+            mode: Display mode ('auto', 'simple', 'multi')
+        """
+        self.max_parallel = max_parallel
+        self.total_aps = total_aps
+        self.mode = mode
+        self.active_aps = {}  # slot_id -> ap_info dict
+        self.completed_count = 0
+        self.failed_count = 0
+        self.lock = threading.Lock()
+        self.last_refresh = 0  # Rate limiting for display updates
+        self.original_log_level = None  # Store original log level
+        
+        # Instance tracking for debugging
+        import uuid
+        self.instance_id = str(uuid.uuid4())[:8]
+        
+        # Detect terminal capabilities
+        self.terminal_supports_ansi = sys.stdout.isatty() and os.getenv('TERM') != 'dumb'
+        
+        # Determine display mode
+        if mode == 'auto':
+            self.use_multiline = self.terminal_supports_ansi and max_parallel > 1
+        elif mode == 'multi':
+            self.use_multiline = True
+        else:  # simple
+            self.use_multiline = False
+        
+        if self.use_multiline:
+            # Debug: Track display instance creation (before logging suppression)
+            # print(f"DEBUG: Creating display instance {self.instance_id}")
+            
+            self._init_multiline_display()
+            # Suppress ALL logging to prevent interference with display
+            self.original_log_level = logging.getLogger().getEffectiveLevel()
+            logging.getLogger().setLevel(logging.CRITICAL)  # Suppress everything except critical errors
+        
+    def _init_multiline_display(self):
+        """Initialize multi-line display by printing empty slots."""
+        if not self.use_multiline:
+            return
+            
+        print(colored("Starting parallel SSH processing...", 'CYAN', bold=True))
+        
+        # Print initial empty slots and summary in one go
+        lines = []
+        for i in range(self.max_parallel):
+            lines.append(f"[Slot {i+1}] Waiting for AP assignment...")
+        lines.append("")  # Empty line
+        lines.append(f"[Active: 0] [Complete: 0] [Failed: 0] [Remaining: {self.total_aps}]")
+        
+        for line in lines:
+            print(line)
+    
+    def update_ap_progress(self, slot_id: int, ap_info: Dict[str, Any], status: str, 
+                          progress_percent: int = 0, final: bool = False):
+        """
+        Update progress for a specific AP slot.
+        
+        Args:
+            slot_id: Slot number (0-based)
+            ap_info: AP information dictionary
+            status: Current status string
+            progress_percent: Progress percentage (0-100)
+            final: Whether this is the final update for this AP
+        """
+        with self.lock:
+            if not self.use_multiline:
+                # Fall back to single-line display
+                ap_index = self.completed_count + self.failed_count + len(self.active_aps) + 1
+                print_ap_progress(ap_index, self.total_aps, ap_info, status, progress_percent, final)
+                if final:
+                    if status == "Complete":
+                        self.completed_count += 1
+                    elif status == "Failed":
+                        self.failed_count += 1
+                return
+            
+            # Multi-line display - update state first, then refresh atomically
+            state_changed = False
+            
+            if not final:
+                # Update or add active AP
+                old_data = self.active_aps.get(slot_id)
+                new_data = {
+                    'ap_info': ap_info,
+                    'status': status,
+                    'progress': progress_percent
+                }
+                if old_data != new_data:
+                    self.active_aps[slot_id] = new_data
+                    state_changed = True
+            else:
+                # Remove from active APs and update counters
+                if slot_id in self.active_aps:
+                    del self.active_aps[slot_id]
+                    state_changed = True
+                
+                if status == "Complete":
+                    self.completed_count += 1
+                    state_changed = True
+                elif status == "Failed":
+                    self.failed_count += 1
+                    state_changed = True
+            
+            # Only refresh if state actually changed
+            if state_changed:
+                self._refresh_display()
+    
+    def _refresh_display(self):
+        """Refresh the entire multi-line display."""
+        if not self.use_multiline or not self.terminal_supports_ansi:
+            return
+        
+        # Rate limiting - only refresh every 0.2 seconds to reduce flicker
+        import time
+        now = time.time()
+        if now - self.last_refresh < 0.2:
+            return
+        self.last_refresh = now
+        
+        # Build complete display content
+        lines = []
+        
+        # Build slot lines
+        for i in range(self.max_parallel):
+            if i in self.active_aps:
+                ap_data = self.active_aps[i]
+                ap_info = ap_data['ap_info']
+                status = ap_data['status']
+                progress = ap_data['progress']
+                
+                ap_name = ap_info.get('name', 'Unknown')
+                venue_name = ap_info.get('venue_name', 'Unknown')
+                serial_number = ap_info.get('serial_number', 'Unknown')
+                
+                progress_bar = create_progress_bar(progress, 100, 10)
+                
+                # Color the status
+                if status == "Starting":
+                    status_colored = colored(status, 'CYAN')
+                elif status == "Connecting":
+                    status_colored = colored(status, 'YELLOW')
+                elif status == "Connected":
+                    status_colored = colored(status, 'GREEN')
+                elif status == "Executing":
+                    status_colored = colored(status, 'BLUE')
+                else:
+                    status_colored = status
+                
+                line = (f"[Slot {i+1}] {colored(venue_name, 'CYAN')} - "
+                       f"{colored(ap_name, 'WHITE', bold=True)} "
+                       f"(SN: {colored(serial_number, 'YELLOW')}) "
+                       f"{progress_bar} {status_colored}")
+            else:
+                line = f"[Slot {i+1}] Waiting for AP assignment..."
+            
+            lines.append(line)
+        
+        # Build summary line
+        active_count = len(self.active_aps)
+        remaining_count = self.total_aps - self.completed_count - self.failed_count
+        summary = (f"[Active: {colored(str(active_count), 'YELLOW')}] "
+                  f"[Complete: {colored(str(self.completed_count), 'GREEN')}] "
+                  f"[Failed: {colored(str(self.failed_count), 'RED' if self.failed_count > 0 else 'GREEN')}] "
+                  f"[Remaining: {remaining_count}]")
+        lines.append("")  # Empty line
+        lines.append(summary)
+        
+        # Clear entire display area and redraw - more reliable than cursor positioning
+        total_lines = len(lines)
+        
+        # Move cursor up to start of our display
+        print(f"\033[{total_lines}A", end='')
+        
+        # Clear and redraw each line
+        for i, line in enumerate(lines):
+            print(f"\033[2K{line}")  # Clear line completely then print content
+        
+        # Don't move cursor back - leave it at the end for next iteration
+    
+    def cleanup_display(self):
+        """Clean up the display when processing is complete."""
+        # Restore original logging level first
+        if self.use_multiline and self.original_log_level is not None:
+            logging.getLogger().setLevel(self.original_log_level)
+        
+        if self.use_multiline and self.terminal_supports_ansi:
+            # Move cursor to beginning of summary line and clear from there down
+            print(f"\033[{self.max_parallel + 1}H", end='')  # Move to summary line
+            print("\033[J", end='')  # Clear from cursor to end of screen
+            # Move cursor below the display area
+            print(f"\033[{self.max_parallel + 3}B")
+        elif self.use_multiline:
+            # Non-ANSI terminal, just add some newlines
+            print("\n" * 2)
+        # Ensure we end on a clean line
+        print()
+
+
+def process_single_ap(ap_info: Dict[str, Any], commands: List[Dict[str, str]], 
+                     default_password: str, timeout: int, ssh_retries: int, 
+                     simulate: bool, slot_id: int, progress_display: MultiLineProgressDisplay) -> Dict[str, Any]:
+    """
+    Worker function to process a single AP in a thread.
+    
+    Args:
+        ap_info: AP information dictionary
+        commands: List of commands to execute
+        default_password: Default SSH password
+        timeout: SSH timeout
+        ssh_retries: Number of SSH retry attempts
+        simulate: Whether to simulate execution
+        slot_id: Progress display slot ID
+        progress_display: Progress display manager
+        
+    Returns:
+        Dictionary with AP processing results
+    """
+    ap_serial = ap_info.get('serial_number', 'Unknown')
+    ap_name = ap_info.get('name', 'Unknown')
+    ap_ip = ap_info.get('ip_address', '')
+    
+    # Determine password to use for this AP
+    ap_password = ap_info.get('ssh_password', '').strip()
+    if not ap_password:
+        ap_password = default_password
+    
+    # Show starting progress
+    progress_display.update_ap_progress(slot_id, ap_info, "Starting", 0)
+    
+    ap_result = {
+        'ap_info': ap_info,
+        'command_results': [],
+        'slot_id': slot_id
+    }
+    
+    try:
+        if simulate:
+            progress_display.update_ap_progress(slot_id, ap_info, "Connecting", 25)
+            time.sleep(0.5)
+            progress_display.update_ap_progress(slot_id, ap_info, "Connected", 50)
+            
+            for cmd_idx, cmd in enumerate(commands):
+                cmd_progress = 50 + int((cmd_idx + 1) / len(commands) * 40)
+                progress_display.update_ap_progress(slot_id, ap_info, "Executing", cmd_progress)
+                
+                ap_result['command_results'].append({
+                    'command': cmd['command'],
+                    'filter': cmd.get('filter'),
+                    'output': f"SIMULATED OUTPUT for command: {cmd['command']}",
+                    'filtered_output': f"SIMULATED FILTERED OUTPUT for command: {cmd['command']}",
+                    'timestamp': datetime.now().isoformat()
+                })
+                time.sleep(0.3)
+            
+            progress_display.update_ap_progress(slot_id, ap_info, "Complete", 100, final=True)
+            ap_result['success'] = True
+            ap_result['commands_executed'] = len(commands)
+            ap_result['commands_failed'] = 0
+            ap_result['ssh_attempts'] = 1
+            
+        else:
+            # Actual SSH connection and command execution
+            progress_display.update_ap_progress(slot_id, ap_info, "Connecting", 25)
+            ssh_conn = APSSHConnection(ap_ip, "admin", ap_password, timeout)
+            
+            # Try to connect with retry logic
+            connection_success, attempts_made, connection_error = ssh_conn.connect_with_retry(ssh_retries)
+            
+            if connection_success:
+                progress_display.update_ap_progress(slot_id, ap_info, "Connected", 50)
+                
+                # Execute each command
+                commands_successful = 0
+                commands_failed = 0
+                for cmd_idx, cmd in enumerate(commands):
+                    cmd_progress = 50 + int((cmd_idx + 1) / len(commands) * 40)
+                    progress_display.update_ap_progress(slot_id, ap_info, "Executing", cmd_progress)
+                    
+                    cmd_result = ssh_conn.execute_command(cmd['command'], cmd.get('filter'))
+                    ap_result['command_results'].append(cmd_result)
+                    
+                    if cmd_result.get('error'):
+                        commands_failed += 1
+                    else:
+                        commands_successful += 1
+                    
+                    # Small delay between commands on same AP
+                    if len(commands) > 1:
+                        time.sleep(1)
+                
+                ssh_conn.cleanup()
+                progress_display.update_ap_progress(slot_id, ap_info, "Complete", 100, final=True)
+                
+                ap_result['success'] = True
+                ap_result['commands_executed'] = commands_successful
+                ap_result['commands_failed'] = commands_failed
+                ap_result['ssh_attempts'] = attempts_made
+                
+            else:
+                progress_display.update_ap_progress(slot_id, ap_info, "Failed", 0, final=True)
+                
+                # Add error entries for all commands
+                for cmd in commands:
+                    ap_result['command_results'].append({
+                        'command': cmd['command'],
+                        'filter': cmd.get('filter'),
+                        'error': f"Failed to connect to AP {ap_ip}: {connection_error}",
+                        'output': '',
+                        'filtered_output': '',
+                        'timestamp': datetime.now().isoformat()
+                    })
+                
+                ap_result['success'] = False
+                ap_result['failure_reason'] = 'Connection failed'
+                ap_result['error_details'] = connection_error
+                ap_result['ssh_attempts'] = attempts_made
+                ap_result['commands_executed'] = 0
+                ap_result['commands_failed'] = len(commands)
+        
+        return ap_result
+        
+    except Exception as e:
+        # Handle unexpected errors
+        progress_display.update_ap_progress(slot_id, ap_info, "Failed", 0, final=True)
+        
+        ap_result['success'] = False
+        ap_result['failure_reason'] = 'Unexpected error'
+        ap_result['error_details'] = str(e)
+        ap_result['commands_executed'] = 0
+        ap_result['commands_failed'] = len(commands)
+        
+        # Add error entries for all commands
+        for cmd in commands:
+            ap_result['command_results'].append({
+                'command': cmd['command'],
+                'filter': cmd.get('filter'),
+                'error': f"Unexpected error processing AP {ap_ip}: {e}",
+                'output': '',
+                'filtered_output': '',
+                'timestamp': datetime.now().isoformat()
+            })
+        
+        return ap_result
+
+
+class ParallelAPProcessor:
+    """Manages parallel processing of APs with thread pool."""
+    
+    def __init__(self, max_workers: int, progress_mode: str = 'auto'):
+        """
+        Initialize parallel AP processor.
+        
+        Args:
+            max_workers: Number of worker threads
+            progress_mode: Progress display mode
+        """
+        self.max_workers = max_workers
+        self.progress_mode = progress_mode
+        self.progress_display = None
+        
+    def execute_commands_parallel(self, ap_list: List[Dict[str, Any]], commands: List[Dict[str, str]], 
+                                 default_password: str, timeout: int = 30, ssh_retries: int = 2, 
+                                 simulate: bool = False, delay: int = 0) -> Dict[str, Any]:
+        """
+        Execute commands on APs in parallel.
+        
+        Args:
+            ap_list: List of APs to process
+            commands: List of commands to execute
+            default_password: Default SSH password
+            timeout: SSH timeout
+            ssh_retries: SSH retry attempts
+            simulate: Whether to simulate execution
+            delay: Delay between AP batches (not individual APs)
+            
+        Returns:
+            Dictionary with execution results
+        """
+        total_aps = len(ap_list)
+        
+        # Initialize progress display
+        self.progress_display = MultiLineProgressDisplay(
+            max_parallel=self.max_workers,
+            total_aps=total_aps,
+            mode=self.progress_mode
+        )
+        
+        results = []
+        successful_aps = []
+        failed_aps = []
+        stats = {
+            'total_aps': total_aps,
+            'processed_aps': 0,
+            'successful_connections': 0,
+            'failed_connections': 0,
+            'total_commands_executed': 0,
+            'total_commands_failed': 0
+        }
+        
+        try:
+            with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+                # Submit all AP processing tasks
+                future_to_ap = {}
+                slot_assignments = {}  # future -> slot_id
+                available_slots = list(range(self.max_workers))
+                
+                # Submit initial batch of work
+                for i, ap in enumerate(ap_list):
+                    if shutdown_requested:
+                        break
+                        
+                    # Wait for available slot if all are busy
+                    while not available_slots and future_to_ap:
+                        # Check for completed futures
+                        completed_futures = [f for f in future_to_ap.keys() if f.done()]
+                        for future in completed_futures:
+                            self._process_completed_future(future, future_to_ap, slot_assignments, 
+                                                         available_slots, results, successful_aps, 
+                                                         failed_aps, stats)
+                        
+                        if not available_slots:
+                            time.sleep(0.1)  # Brief wait before checking again
+                    
+                    if shutdown_requested:
+                        break
+                    
+                    # Assign slot and submit work
+                    slot_id = available_slots.pop(0)
+                    future = executor.submit(
+                        process_single_ap,
+                        ap, commands, default_password, timeout, ssh_retries,
+                        simulate, slot_id, self.progress_display
+                    )
+                    future_to_ap[future] = ap
+                    slot_assignments[future] = slot_id
+                    
+                    # Apply delay between submissions if specified
+                    if delay > 0 and i < len(ap_list) - 1:
+                        time.sleep(delay)
+                
+                # Wait for remaining futures to complete
+                while future_to_ap:
+                    if shutdown_requested:
+                        # Cancel remaining futures
+                        for future in list(future_to_ap.keys()):
+                            future.cancel()
+                        break
+                    
+                    completed_futures = [f for f in future_to_ap.keys() if f.done()]
+                    for future in completed_futures:
+                        self._process_completed_future(future, future_to_ap, slot_assignments,
+                                                     available_slots, results, successful_aps,
+                                                     failed_aps, stats)
+                    
+                    if future_to_ap:  # Still have active futures
+                        time.sleep(0.1)
+        
+        finally:
+            # Clean up display BEFORE any other output
+            if self.progress_display:
+                self.progress_display.cleanup_display()
+                # Ensure we're on a fresh line for subsequent output
+                print("\n" + "="*80)
+        
+        return {
+            'results': results,
+            'successful_aps': successful_aps,
+            'failed_aps': failed_aps,
+            'stats': stats
+        }
+    
+    def _process_completed_future(self, future, future_to_ap, slot_assignments, available_slots,
+                                 results, successful_aps, failed_aps, stats):
+        """Process a completed future and update statistics."""
+        try:
+            ap_result = future.result()
+            results.append(ap_result)
+            
+            # Update statistics
+            stats['processed_aps'] += 1
+            
+            if ap_result.get('success', False):
+                stats['successful_connections'] += 1
+                stats['total_commands_executed'] += ap_result.get('commands_executed', 0)
+                stats['total_commands_failed'] += ap_result.get('commands_failed', 0)
+                
+                # Add to successful APs list
+                ap_success_info = dict(ap_result['ap_info'])
+                ap_success_info.update({
+                    'commands_executed': ap_result.get('commands_executed', 0),
+                    'commands_failed': ap_result.get('commands_failed', 0),
+                    'execution_time': datetime.now().isoformat(),
+                    'ssh_attempts': ap_result.get('ssh_attempts', 0)
+                })
+                successful_aps.append(ap_success_info)
+            else:
+                stats['failed_connections'] += 1
+                stats['total_commands_failed'] += ap_result.get('commands_failed', 0)
+                
+                # Add to failed APs list
+                ap_failure_info = dict(ap_result['ap_info'])
+                ap_failure_info.update({
+                    'failure_reason': ap_result.get('failure_reason', 'Unknown'),
+                    'error_details': ap_result.get('error_details', ''),
+                    'ssh_attempts': ap_result.get('ssh_attempts', 0),
+                    'failure_time': datetime.now().isoformat()
+                })
+                failed_aps.append(ap_failure_info)
+            
+        except Exception as e:
+            # Handle future execution errors
+            logger.error(f"Error processing AP result: {e}")
+            stats['processed_aps'] += 1
+            stats['failed_connections'] += 1
+        
+        finally:
+            # Clean up and make slot available
+            if future in slot_assignments:
+                slot_id = slot_assignments[future]
+                available_slots.append(slot_id)
+                del slot_assignments[future]
+            
+            if future in future_to_ap:
+                del future_to_ap[future]
 
 
 class APSSHConnection:
@@ -1337,6 +2013,15 @@ Examples:
   
   # Use custom SSH retry count
   %(prog)s --config config.ini --import-aps aps.csv --import-commands commands.csv --password secret --ssh-retries 3
+  
+  # Use parallel processing with 10 concurrent SSH connections
+  %(prog)s --config config.ini --import-aps aps.csv --import-commands commands.csv --password secret --parallel 10
+  
+  # Force multi-line progress display for parallel processing
+  %(prog)s --config config.ini --import-aps aps.csv --import-commands commands.csv --password secret --parallel 5 --parallel-mode multi
+  
+  # Use sequential processing (single AP at a time)
+  %(prog)s --config config.ini --import-aps aps.csv --import-commands commands.csv --password secret --parallel 1
 
 Commands CSV format:
   command,filter
@@ -1388,6 +2073,13 @@ Commands CSV format:
                        help='Export successful APs to CSV file')
     parser.add_argument('--export-failed-csv',
                        help='Export failed APs to CSV file')
+    parser.add_argument('--parallel', type=int, default=7,
+                       help='Number of parallel SSH connections (1-20, default: 7)')
+    parser.add_argument('--parallel-mode', default='auto',
+                       choices=['auto', 'simple', 'multi'],
+                       help='Progress display mode: auto (detect terminal), simple (single line), multi (multiple lines)')
+    parser.add_argument('--verbose', action='store_true',
+                       help='Generate detailed analysis report with full command output patterns')
     
     args = parser.parse_args()
     
@@ -1397,6 +2089,10 @@ Commands CSV format:
     
     if args.export and (args.import_aps or args.import_commands):
         parser.error("Cannot use --export with --import options")
+    
+    # Validate parallel argument
+    if args.parallel < 1 or args.parallel > 20:
+        parser.error("--parallel must be between 1 and 20")
     
     # Password validation will be done after loading CSV to check if passwords are present
     
@@ -1447,7 +2143,9 @@ Commands CSV format:
                     resume=args.resume,
                     batch_size=args.batch_size,
                     ssh_retries=args.ssh_retries,
-                    include_non_operational=args.include_non_operational
+                    include_non_operational=args.include_non_operational,
+                    parallel=args.parallel,
+                    parallel_mode=args.parallel_mode
                 )
                 
                 results = execution_result['results']
@@ -1472,9 +2170,12 @@ Commands CSV format:
                     write_failed_csv(failed_aps, args.export_failed_csv)
                     print(f"\nFailed CSV written to: {args.export_failed_csv}")
                 
-                # Generate comprehensive report if there are results
+                # Generate report if there are results
                 if results:
-                    generate_comprehensive_report(results, stats, commands, args.output_text)
+                    if args.verbose:
+                        generate_detailed_report(results, stats, commands, args.output_text)
+                    else:
+                        generate_concise_report(results, stats, commands, args.output_text)
                     print(f"\nCommand execution completed successfully")
                     print(f"Summary: {len(successful_aps)} successful, {len(failed_aps)} failed")
                     

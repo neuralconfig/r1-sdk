@@ -21,6 +21,7 @@ A comprehensive Python SDK for interacting with the RUCKUS One (R1) network mana
 - [CLI Tools](#cli-tools)
 - [AP Reboot Manager](#ap-reboot-manager)
 - [AP CLI Manager](#ap-cli-manager)
+- [AP Support Log Analyzer](#ap-support-log-analyzer)
 - [Utility Scripts](#utility-scripts)
 - [Testing](#testing)
 - [Troubleshooting](#troubleshooting)
@@ -40,7 +41,7 @@ A comprehensive Python SDK for interacting with the RUCKUS One (R1) network mana
 - **OAuth2 Authentication**: Automatic token management and refresh
 - **CLI Tools**: Both command-line and interactive modes
 - **CSV Import**: Bulk L3 ACL policy creation from CSV files
-- **AP Management Tools**: Advanced AP reboot and CLI command execution utilities
+- **AP Management Tools**: Advanced AP reboot, CLI command execution, and support log analysis utilities
 - **Error Handling**: Custom exceptions with detailed error information
 - **Logging Support**: Configurable logging for debugging and monitoring
 - **Inventory Reporting**: Generate comprehensive network inventory reports
@@ -62,6 +63,7 @@ This SDK is **actively maintained** and provides solid coverage of core RUCKUS O
 - **CLI Tools**: Both command-line and interactive interfaces
 - **AP Reboot Manager**: Advanced batch AP management with safety features
 - **AP CLI Manager**: SSH-based CLI command execution across multiple APs with filtering
+- **AP Support Log Analyzer**: Automated support log collection and analysis with pattern matching
 
 ### 🔄 Partial Implementation
 - **Advanced AP Configuration**: Basic operations available, advanced configuration pending
@@ -1034,6 +1036,367 @@ The AP CLI Manager complements the AP Reboot Manager tool:
 - **Consistent Authentication**: Same credential and configuration management
 - **Combined Workflows**: Use CLI Manager for diagnostics, Reboot Manager for remediation
 - **Shared Best Practices**: Similar safety features and operational patterns
+
+## AP Support Log Analyzer
+
+The SDK includes a comprehensive AP Support Log Analyzer tool for downloading, analyzing, and reporting on Access Point support logs. This tool provides automated log collection with pattern analysis capabilities for network configuration validation and troubleshooting.
+
+### Features
+
+- **Export**: Generate CSV inventory of all Access Points for log collection
+- **Log Download**: Automated support log download via RUCKUS One API
+- **Pattern Analysis**: Configurable regex pattern matching for log analysis
+- **Configuration Validation**: Automatic detection of good/bad/unknown configurations
+- **Progress Tracking**: Real-time progress display with running statistics
+- **Resume Capability**: Continue interrupted operations from checkpoints
+- **Session Organization**: Timestamped session directories for organized output
+- **Multiple Output Formats**: Console reports, detailed text files, and CSV exports
+- **Search-Only Mode**: Analyze existing log files without downloading
+- **Parallel Processing**: Concurrent log downloads with configurable workers
+
+### Quick Start
+
+```bash
+# 1. Export all APs to CSV for review
+python3 ap_support_logs.py --config config.ini --export
+
+# 2. Edit the generated CSV to select APs for log collection
+
+# 3. Simulate the log collection (dry run)
+python3 ap_support_logs.py --config config.ini --import-aps ap_export_20250822_123456.csv --simulate
+
+# 4. Download and analyze logs with progress display
+python3 ap_support_logs.py --config config.ini --import-aps ap_export_20250822_123456.csv --show-progress
+```
+
+### Export Mode
+
+Export all Access Points from your tenant with current status:
+
+```bash
+# Export with default filename (includes timestamp)
+python3 ap_support_logs.py --config config.ini --export
+
+# Export with custom filename
+python3 ap_support_logs.py --config config.ini --export --output my_ap_inventory.csv
+```
+
+The exported CSV includes:
+- AP Serial Number, Name, Model, Firmware
+- Venue ID and Name
+- Status, IP Address, MAC Address  
+- Connection state for operational filtering
+
+### CSV File Format
+
+The AP CSV file has this structure:
+
+```csv
+serial_number,mac_address,model,firmware_version,name,venue_id,venue_name,ip_address,status,connection_state
+502339500405,CC:1B:5A:33:C8:60,R770,7.1.1.520.830,Office-R770-405,b743f1b8873943979cc24baa95c53e83,Home,192.168.37.118,2_00_Operational,CONNECTED
+```
+
+Only operational APs with CONNECTED state can have support logs downloaded.
+
+### Operation Modes
+
+#### Download & Analyze Mode (Default)
+Process selected APs by downloading logs and analyzing them:
+
+```bash
+# Standard processing with default VXLAN pattern
+python3 ap_support_logs.py --config config.ini --import-aps aps.csv
+
+# With progress display and parallel processing
+python3 ap_support_logs.py --config config.ini --import-aps aps.csv --parallel 10 --show-progress
+
+# Custom search pattern
+python3 ap_support_logs.py --config config.ini --import-aps aps.csv --search-pattern "radio\s+status"
+```
+
+#### Search-Only Mode
+Analyze existing log files without downloading new ones:
+
+```bash
+# Analyze logs in current directory
+python3 ap_support_logs.py --search-only --import-aps aps.csv
+
+# Analyze logs in specific directory
+python3 ap_support_logs.py --search-only --log-dir ./support_logs --import-aps aps.csv
+```
+
+#### Simulation Mode
+Test operations without actual downloads:
+
+```bash
+# Preview what would be processed
+python3 ap_support_logs.py --config config.ini --import-aps aps.csv --simulate
+```
+
+### Pattern Analysis
+
+The tool analyzes logs using configurable regex patterns to identify configuration states:
+
+#### Default VXLAN Pattern
+```regex
+n\s+u\s+vxlan0\s+1\s+(\w+)
+```
+
+This pattern looks for VXLAN configuration lines and classifies them as:
+- **Good Config**: Lines ending with "all" (proper configuration)
+- **Bad Config**: Lines ending with numbers (incomplete configuration)  
+- **Unknown Config**: No matching patterns found
+
+#### Custom Patterns
+```bash
+# Search for radio status information
+python3 ap_support_logs.py --config config.ini --import-aps aps.csv --search-pattern "Radio\s+\d+.*:\s+(\w+)"
+
+# Search for client connection patterns
+python3 ap_support_logs.py --config config.ini --import-aps aps.csv --search-pattern "client.*connected"
+```
+
+### Resume Capability
+
+For large operations, the tool supports checkpoint-based resume:
+
+```bash
+# Normal processing creates checkpoints automatically
+python3 ap_support_logs.py --config config.ini --import-aps large_ap_list.csv
+
+# Resume interrupted operation
+python3 ap_support_logs.py --resume
+
+# Custom checkpoint frequency (default: 50 APs)
+python3 ap_support_logs.py --config config.ini --import-aps aps.csv --batch-size 25
+```
+
+Checkpoint files (`.checkpoint_ap_support_*.json`) store:
+- Processing progress and AP index
+- All results and statistics
+- Download and analysis data
+- Session information
+
+### Output Options
+
+#### Session Directories
+Each run creates a timestamped session directory:
+```
+ap_support_logs_20250822_143020/
+├── 502339500405_support_20250822_143021.log
+├── 172439001091_support_20250822_143025.log
+└── report.txt
+```
+
+#### Report Generation
+```bash
+# Generate detailed text report
+python3 ap_support_logs.py --config config.ini --import-aps aps.csv --report-file detailed_report.txt
+
+# Export results to CSV files
+python3 ap_support_logs.py --config config.ini --import-aps aps.csv --good-aps-csv good_configs.csv --bad-aps-csv bad_configs.csv --all-results-csv all_results.csv
+```
+
+#### Progress Display
+```bash
+# Show real-time progress with statistics
+python3 ap_support_logs.py --config config.ini --import-aps aps.csv --show-progress
+```
+
+Progress display includes:
+- Overall progress bar with percentage
+- Running totals: Processed/Good/Bad/Unknown/Failed
+- Individual AP status updates
+
+### Advanced Configuration
+
+#### Timeout and Retry Settings
+```bash
+# Custom timeout and retry settings for API calls
+python3 ap_support_logs.py --config config.ini --import-aps aps.csv --timeout 600 --max-retries 15 --retry-delay 45
+```
+
+#### Processing Options
+```bash
+# Keep compressed files after decompression
+python3 ap_support_logs.py --config config.ini --import-aps aps.csv --keep-compressed
+
+# Download only, skip pattern analysis
+python3 ap_support_logs.py --config config.ini --import-aps aps.csv --no-search
+
+# Add delays for sequential processing
+python3 ap_support_logs.py --config config.ini --import-aps aps.csv --parallel 1 --delay 10
+```
+
+### Command Line Options
+
+```bash
+# Required
+--config CONFIG              # Path to credentials configuration file
+
+# Mode Selection (choose one)
+--export                     # Export all APs to CSV
+--import-aps AP_FILE         # Import AP list and process logs
+--search-only                # Search existing logs only
+
+# Processing Options
+--parallel COUNT            # Number of parallel workers (1-20, default: 5)
+--timeout SECONDS           # Log generation timeout (default: 300)
+--max-retries COUNT         # Max retry attempts (default: 10)
+--retry-delay SECONDS       # Delay between retries (default: 30)
+--delay SECONDS            # Delay between APs in sequential mode
+--simulate                  # Dry run mode - no actual downloads
+--force                    # Process more than 100 APs without confirmation
+
+# Pattern Analysis
+--search-pattern REGEX      # Custom regex pattern for log analysis
+--no-search                # Skip pattern analysis after download
+
+# Output Options
+--output-dir DIRECTORY      # Directory for log files (default: current)
+--output FILENAME          # Custom filename for --export
+--report-file FILENAME     # Save detailed report to text file
+--good-aps-csv FILENAME    # Export good configuration APs to CSV
+--bad-aps-csv FILENAME     # Export bad configuration APs to CSV
+--all-results-csv FILENAME # Export all results to CSV
+--show-progress            # Display real-time progress
+
+# File Management
+--keep-compressed          # Keep .gz files after decompression
+--log-dir DIRECTORY        # Directory with existing logs (for --search-only)
+
+# Resume Options
+--resume                   # Resume from last checkpoint
+--batch-size SIZE          # Checkpoint frequency (default: 50)
+
+# Logging Options
+--log-level LEVEL          # DEBUG, INFO, WARNING, ERROR
+```
+
+### Example Workflows
+
+#### Network Configuration Audit
+```bash
+# 1. Export all APs
+python3 ap_support_logs.py --config config.ini --export --output network_audit_aps.csv
+
+# 2. Download all operational AP logs
+python3 ap_support_logs.py --config config.ini --import-aps network_audit_aps.csv --parallel 10 --show-progress --report-file audit_report.txt
+
+# 3. Export results by configuration status
+python3 ap_support_logs.py --config config.ini --import-aps network_audit_aps.csv --good-aps-csv properly_configured.csv --bad-aps-csv needs_attention.csv
+```
+
+#### VXLAN Configuration Validation
+```bash
+# Focus on VXLAN configuration analysis
+python3 ap_support_logs.py --config config.ini --import-aps aps.csv --search-pattern "n\s+u\s+vxlan0\s+1\s+(\w+)" --report-file vxlan_status.txt
+
+# Process only a subset for testing
+head -10 aps.csv > test_aps.csv
+python3 ap_support_logs.py --config config.ini --import-aps test_aps.csv --simulate
+```
+
+#### Troubleshooting Workflow
+```bash
+# Download logs for problem APs
+python3 ap_support_logs.py --config config.ini --import-aps problem_aps.csv --keep-compressed --no-search
+
+# Then analyze with multiple patterns
+python3 ap_support_logs.py --search-only --import-aps problem_aps.csv --search-pattern "error|fail|timeout" --log-dir ap_support_logs_20250822_143020
+```
+
+#### Large Scale Processing
+```bash
+# Process thousands of APs with resume capability
+python3 ap_support_logs.py --config config.ini --import-aps enterprise_aps.csv --parallel 20 --force --batch-size 100 --show-progress
+
+# If interrupted, resume from checkpoint
+python3 ap_support_logs.py --resume
+```
+
+### Output Analysis
+
+#### Console Report
+The tool provides immediate console feedback:
+```
+=== AP SUPPORT LOG PROCESSING REPORT ===
+
+Summary:
+  Total APs: 125
+  Completed: 125
+  Good Configurations: 98 (78.4%)
+  Bad Configurations: 15 (12.0%)
+  Unknown Configurations: 7 (5.6%)
+  Failed Downloads: 5 (4.0%)
+
+Session Directory: /path/to/ap_support_logs_20250822_143020
+```
+
+#### Detailed Text Report
+Comprehensive analysis including:
+- Processing statistics and timing
+- AP-by-AP results with log analysis
+- Pattern match details
+- Failed operations with error reasons
+
+#### CSV Exports
+- **Good APs**: APs with proper configuration patterns
+- **Bad APs**: APs needing configuration attention
+- **All Results**: Complete processing results with analysis data
+
+### Session Management
+
+Each processing session creates a timestamped directory:
+```
+ap_support_logs_20250822_143020/
+├── 502339500405_support_20250822_143021.log    # Decompressed log
+├── 172439001091_support_20250822_143025.log
+├── report.txt                                  # Detailed report
+└── .processed_logs.json                        # Session metadata
+```
+
+Log files are named with serial number and download timestamp for easy identification.
+
+### Best Practices
+
+1. **Always export first**: Get current AP inventory and status before processing
+2. **Use simulation mode**: Test your AP selection and parameters before actual downloads  
+3. **Monitor operational status**: Only operational, connected APs can provide logs
+4. **Set appropriate timeouts**: Log generation can take several minutes per AP
+5. **Use parallel processing**: Significantly faster for multiple APs (recommended: 5-10 workers)
+6. **Enable progress display**: Monitor long-running operations with `--show-progress`
+7. **Implement resume strategy**: Use checkpoints for operations with 50+ APs
+8. **Organize output**: Each session gets its own directory with timestamp
+9. **Keep logs organized**: Use session directories for easy management
+10. **Schedule during maintenance**: Log collection can impact AP performance
+
+### Safety Features
+
+- **Operational AP Filtering**: Automatically processes only operational APs
+- **Simulation Mode**: Test operations without making changes
+- **Progress Checkpoints**: Resume capability for interrupted operations
+- **Timeout Protection**: Prevents indefinite waits for log generation
+- **Error Isolation**: Failed APs don't stop processing of remaining APs
+- **Confirmation Prompts**: Requires explicit confirmation for large operations (100+ APs)
+- **Session Isolation**: Each run creates separate directory to avoid conflicts
+
+### Integration with Other Tools
+
+The AP Support Log Analyzer complements other SDK tools:
+
+- **Same AP CSV Format**: Export from AP Reboot Manager or AP CLI Manager, use for log analysis
+- **Consistent Authentication**: Same credential and configuration management  
+- **Combined Workflows**: Use with AP CLI Manager for comprehensive network analysis
+- **Shared Safety Features**: Similar operational patterns and confirmation prompts
+
+### Performance Considerations
+
+- **API Rate Limits**: Respects RUCKUS One API rate limiting with automatic retries
+- **Log Generation Time**: Support log generation is asynchronous and can take 2-5 minutes per AP
+- **Parallel Processing**: Optimal worker count is 5-10 for best balance of speed and resource usage
+- **Storage Requirements**: Support logs are typically 5-50MB each when decompressed
+- **Session Persistence**: Checkpoint data enables recovery from interruptions
 
 ## Utility Scripts
 
