@@ -76,6 +76,8 @@ class RuckusOneClient:
         self.identity_groups = None
         self.identities = None
         self.l3acl = None
+        self.cli_templates = None
+        self.switch_profiles = None
         
         # Automatically initialize the modules
         self._init_modules()
@@ -304,10 +306,12 @@ class RuckusOneClient:
         from .modules.identity_groups import IdentityGroups
         from .modules.identities import Identities
         from .modules.l3acl import L3ACL
+        from .modules.cli_templates import CLITemplates
+        from .modules.switch_profiles import SwitchProfiles
         
         # Initialize modules (they will register themselves with the client)
         Venues(self)
-        AccessPoints(self) 
+        AccessPoints(self)
         Switches(self)
         WLANs(self)
         VLANs(self)
@@ -315,6 +319,8 @@ class RuckusOneClient:
         IdentityGroups(self)
         Identities(self)
         L3ACL(self)
+        CLITemplates(self)
+        SwitchProfiles(self)
         
         # Log module initialization
         logger.debug("All API modules initialized successfully")

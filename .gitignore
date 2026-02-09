@@ -56,8 +56,34 @@ Thumbs.db
 
 # API documentation working files
 APIdocs/
+APIdocs2/
 screenshots/
 reference-code/
+consolidated_api.html
+api_docs_beautifulsoup.txt
+api_docs_html2text.md
+extract_api_docs.py
 
 # Data directories
 data/
+
+# Test and debug scripts
+test_*.py
+debug_*.py
+add_switch_to_venue.py
+cli_profile_inspector.py
+get_switch_details.py
+list_*.py
+export_wifi_configs.py
+switch_config_backup.py
+
+# CSV and JSON export files
+switch_export_*.csv
+switch_status_report_*.csv
+wifi_configs_*.csv
+wifi_configs_*.json
+failed_aps_*.csv
+mgh-aps*.csv
+
+# Backup directories
+switch_backups_*/
