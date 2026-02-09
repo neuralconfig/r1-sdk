@@ -343,14 +343,14 @@ class Switches:
     def get_statistics(self, venue_id: str, switch_id: str) -> Dict[str, Any]:
         """
         Get statistics for a switch.
-        
+
         Args:
             venue_id: ID of the venue
             switch_id: ID of the switch
-            
+
         Returns:
             Dict containing switch statistics
-            
+
         Raises:
             ResourceNotFoundError: If the switch does not exist
         """
@@ -360,3 +360,95 @@ class Switches:
             raise ResourceNotFoundError(
                 message=f"Switch with ID {switch_id} not found in venue {venue_id}"
             )
+
+    def add_to_venue(self, venue_id: str, serial_number: str, name: str,
+                     description: Optional[str] = None,
+                     enable_stack: bool = False,
+                     jumbo_mode: bool = False,
+                     igmp_snooping: str = "none",
+                     spanning_tree_priority: Optional[int] = None,
+                     initial_vlan_id: Optional[int] = None,
+                     trust_ports: Optional[List[str]] = None,
+                     stack_members: Optional[List[Dict[str, Any]]] = None,
+                     rear_module: str = "none",
+                     specified_type: str = "ROUTER",
+                     use_simple_endpoint: bool = False,
+                     **kwargs) -> Dict[str, Any]:
+        """
+        Add/preprovision a switch to a venue.
+
+        Based on analysis of existing switches and the official Postman collection,
+        this method supports both endpoint variations for switch addition.
+
+        Args:
+            venue_id: ID of the venue to add the switch to
+            serial_number: Serial number of the switch (used as the switch ID)
+            name: Name for the switch (REQUIRED)
+            description: Optional description for the switch
+            enable_stack: Whether to enable stacking (default: False)
+            jumbo_mode: Whether to enable jumbo frames (default: False)
+            igmp_snooping: IGMP snooping setting (default: "none")
+            spanning_tree_priority: Spanning tree priority (optional)
+            initial_vlan_id: Initial VLAN ID (optional)
+            trust_ports: List of trust port names (optional)
+            stack_members: List of stack member configurations (optional)
+            rear_module: Rear module configuration (default: "none")
+            specified_type: Switch type specification (default: "ROUTER")
+            use_simple_endpoint: Use official Postman endpoint POST /switches (default: False)
+            **kwargs: Additional switch configuration parameters
+
+        Returns:
+            Dict containing the created switch details
+
+        Raises:
+            ValidationError: If the switch data is invalid or API returns error
+        """
+        logger.debug(f"Adding switch {serial_number} to venue {venue_id}")
+
+        if use_simple_endpoint:
+            # Use the official Postman collection endpoint and payload structure
+            switch_data = {
+                "name": name,
+                "id": serial_number,
+                "venueId": venue_id,
+                "stackMembers": stack_members or [],
+                "trustPorts": trust_ports or []
+            }
+            endpoint = "/switches"
+        else:
+            # Use the documented API endpoint with full payload
+            switch_data = {
+                "name": name,
+                "id": serial_number,  # The API uses 'id' field for serial number
+                "venueId": venue_id,
+                "enableStack": enable_stack,
+                "jumboMode": jumbo_mode,
+                "igmpSnooping": igmp_snooping,
+                "rearModule": rear_module,
+                "specifiedType": specified_type
+            }
+
+            # Add optional fields only if they have values
+            if description:
+                switch_data["description"] = description
+            if trust_ports:
+                switch_data["trustPorts"] = trust_ports
+            if stack_members:
+                switch_data["stackMembers"] = stack_members
+            if spanning_tree_priority is not None:
+                switch_data["spanningTreePriority"] = spanning_tree_priority
+            if initial_vlan_id is not None:
+                switch_data["initialVlanId"] = initial_vlan_id
+
+            endpoint = f"/venues/{venue_id}/switches"
+
+        # Add any additional parameters
+        switch_data.update(kwargs)
+
+        try:
+            result = self.client.post(endpoint, data=switch_data)
+            logger.debug(f"Switch addition successful: {result}")
+            return result
+        except Exception as e:
+            logger.exception(f"Error adding switch to venue: {str(e)}")
+            raise

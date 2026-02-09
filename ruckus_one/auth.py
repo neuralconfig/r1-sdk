@@ -83,10 +83,11 @@ class Auth:
         try:
             response = requests.post(token_url, data=auth_data)
             logger.debug(f"Auth response status: {response.status_code}")
-            
+            logger.debug(f"Auth response body: {response.text}")
+
             if response.status_code != 200:
                 logger.error(f"Auth error response: {response.text}")
-                
+
             response.raise_for_status()
             data = response.json()
             
