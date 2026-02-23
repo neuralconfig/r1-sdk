@@ -14,6 +14,7 @@ build/
 
 # Virtual environments
 venv/
+.venv/
 env/
 ENV/
 
@@ -67,9 +68,9 @@ extract_api_docs.py
 # Data directories
 data/
 
-# Test and debug scripts
-test_*.py
-debug_*.py
+# Test and debug scripts (root-level only — don't ignore tests/ subdir)
+/test_*.py
+/debug_*.py
 add_switch_to_venue.py
 cli_profile_inspector.py
 get_switch_details.py
@@ -87,3 +88,7 @@ mgh-aps*.csv
 
 # Backup directories
 switch_backups_*/
+
+# OpenAPI spec archives (JSON is committed in openapi-specs/)
+*.zip
+/RUCKUS_One_Consolidated_API.json
