@@ -502,3 +502,50 @@ def test_delete_delegates(mock_req, client):
     result = client.delete("/v1/venues/1")
     assert mock_req.call_args[1]["method"] == "DELETE"
     assert result == b""
+
+
+# --- paginate_query() ---------------------------------------------------
+
+
+class TestPaginateQuery:
+    """Tests for R1Client.paginate_query()."""
+
+    def test_single_page(self, client):
+        """Single-page result should return all items at once."""
+        client.post = MagicMock(return_value={
+            "data": [{"id": 1}, {"id": 2}],
+            "total": 2,
+        })
+        result = client.paginate_query("/venues/query")
+        assert result == [{"id": 1}, {"id": 2}]
+        client.post.assert_called_once()
+        call_data = client.post.call_args[1]["data"]
+        assert call_data["page"] == 0
+        assert call_data["pageSize"] == 100
+
+    def test_multi_page(self, client):
+        """Should iterate pages until all items are collected."""
+        client.post = MagicMock(side_effect=[
+            {"data": [{"id": 1}, {"id": 2}], "total": 3},
+            {"data": [{"id": 3}], "total": 3},
+        ])
+        result = client.paginate_query("/venues/query", page_size=2)
+        assert result == [{"id": 1}, {"id": 2}, {"id": 3}]
+        assert client.post.call_count == 2
+        assert client.post.call_args_list[0][1]["data"]["page"] == 0
+        assert client.post.call_args_list[1][1]["data"]["page"] == 1
+
+    def test_empty_result(self, client):
+        """Empty result set should return empty list."""
+        client.post = MagicMock(return_value={"data": [], "total": 0})
+        result = client.paginate_query("/venues/query")
+        assert result == []
+
+    def test_custom_query_passthrough(self, client):
+        """Custom query data should be merged into each page request."""
+        client.post = MagicMock(return_value={"data": [], "total": 0})
+        client.paginate_query("/venues/query", query_data={"searchString": "HQ"})
+        call_data = client.post.call_args[1]["data"]
+        assert call_data["searchString"] == "HQ"
+        assert "pageSize" in call_data
+        assert "page" in call_data

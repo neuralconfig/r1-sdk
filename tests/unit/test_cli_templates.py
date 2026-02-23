@@ -823,3 +823,24 @@ class TestEdgeCases:
         # The variable list in put call should contain the new variable
         put_vars = client.put.call_args[1]["data"]["variables"]
         assert len(put_vars) == 1
+
+
+# ── list_all ─────────────────────────────────────────────────────────────
+
+
+class TestListAll:
+    """Tests for CLITemplates.list_all()."""
+
+    def test_delegates_to_paginate_query(self, cli_templates):
+        cli_templates.client.paginate_query.return_value = [{"id": "t1"}]
+        result = cli_templates.list_all()
+        cli_templates.client.paginate_query.assert_called_once_with(
+            "/cliTemplates/query", {}
+        )
+        assert result == [{"id": "t1"}]
+
+    def test_passes_kwargs(self, cli_templates):
+        cli_templates.client.paginate_query.return_value = []
+        cli_templates.list_all(searchString="test")
+        call_data = cli_templates.client.paginate_query.call_args[0][1]
+        assert call_data["searchString"] == "test"

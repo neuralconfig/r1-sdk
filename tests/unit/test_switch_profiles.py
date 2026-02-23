@@ -1794,3 +1794,24 @@ class TestGetMappedSwitches:
         sp.client.get.side_effect = ResourceNotFoundError(message="not found")
         with pytest.raises(ResourceNotFoundError, match="not found"):
             sp.get_mapped_switches('p1')
+
+
+# ── list_all ─────────────────────────────────────────────────────────────
+
+
+class TestListAll:
+    """Tests for SwitchProfiles.list_all()."""
+
+    def test_delegates_to_paginate_query(self, switch_profiles):
+        switch_profiles.client.paginate_query.return_value = [{"id": "p1"}]
+        result = switch_profiles.list_all()
+        switch_profiles.client.paginate_query.assert_called_once_with(
+            "/switchProfiles/query", {}
+        )
+        assert result == [{"id": "p1"}]
+
+    def test_passes_kwargs(self, switch_profiles):
+        switch_profiles.client.paginate_query.return_value = []
+        switch_profiles.list_all(searchString="test")
+        call_data = switch_profiles.client.paginate_query.call_args[0][1]
+        assert call_data["searchString"] == "test"

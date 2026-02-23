@@ -2,7 +2,7 @@
 
 A Python SDK for the RUCKUS One (R1) network management platform API.
 
-> **Alpha** — This SDK covers ~5% of the R1 API (1528 operations). Core modules for venues, APs, switches, WLANs, VLANs, DPSK, identities, and L3 ACLs are implemented. See [API Coverage](#api-coverage) for details.
+> **Alpha** — This SDK covers ~5% of the R1 API (1528 operations). Core modules for venues, APs, switches, WiFi networks, VLAN pools, DPSK, identities, and L3 ACL policies are implemented. See [API Coverage](#api-coverage) for details.
 
 ## Installation
 
@@ -43,8 +43,8 @@ for venue in venues.get('data', []):
 # List APs
 aps = client.aps.list({"pageSize": 100, "page": 0})
 
-# List WLANs
-wlans = client.wlans.list({"pageSize": 100, "page": 0})
+# List WiFi networks
+networks = client.wifi_networks.list({"pageSize": 100, "page": 0})
 ```
 
 ### Alternative: Environment Variables
@@ -64,17 +64,17 @@ client = R1Client.from_env()
 
 | Module | Access via | Key Methods |
 |--------|-----------|-------------|
-| Venues | `client.venues` | `list()`, `get(id)`, `create()`, `update()`, `delete()` |
-| Access Points | `client.aps` | `list(query)`, `get(id)`, `reboot()` |
-| Switches | `client.switches` | `list(query)`, `get(id)`, `get_ports()` |
-| WLANs | `client.wlans` | `list(query)`, `get(id)`, `create()`, `update()` |
-| VLANs | `client.vlans` | `list_pools()`, `get_pool()`, `create_pool()` |
+| Venues | `client.venues` | `list()`, `list_all()`, `get(id)`, `create()`, `update()`, `delete()` |
+| Access Points | `client.aps` | `list(query)`, `list_all()`, `get(id)`, `reboot()` |
+| Switches | `client.switches` | `list(query)`, `list_all()`, `get(id)`, `get_ports()` |
+| WiFi Networks | `client.wifi_networks` | `list(query)`, `list_all()`, `get(id)`, `create()`, `update()` |
+| VLAN Pools | `client.vlan_pools` | `list()`, `get()`, `create()` |
 | DPSK | `client.dpsk` | `list_services()`, `list_passphrases()`, `create_passphrase()` |
-| Identities | `client.identities` | `list()`, `get()`, `create()`, `update()`, `delete()` |
-| Identity Groups | `client.identity_groups` | `list()`, `get()`, `create()` |
-| L3 ACL | `client.l3acl` | `list()`, `get()`, `create()`, `update()`, `delete()` |
-| CLI Templates | `client.cli_templates` | `list()`, `get()`, `create()` |
-| Switch Profiles | `client.switch_profiles` | `list()`, `get()`, `create()`, `update()` |
+| Identities | `client.identities` | `list()`, `list_all(group_id)`, `get()`, `create()`, `update()`, `delete()` |
+| Identity Groups | `client.identity_groups` | `list()`, `list_all()`, `get()`, `create()` |
+| L3 ACL Policies | `client.l3_acl_policies` | `list()`, `get()`, `create()`, `update()`, `delete()` |
+| CLI Templates | `client.cli_templates` | `list()`, `list_all()`, `get()`, `create()` |
+| Switch Profiles | `client.switch_profiles` | `list()`, `list_all()`, `get()`, `create()`, `update()` |
 
 ## API Coverage
 
@@ -128,9 +128,6 @@ python3 -m venv .venv
 
 # Run with coverage
 .venv/bin/pytest tests/unit/ --cov=r1_sdk --cov-report=term-missing
-
-# Integration tests (requires config.ini with valid credentials)
-.venv/bin/pytest tests/integration/ -m integration -v
 ```
 
 ## License

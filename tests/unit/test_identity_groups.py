@@ -357,3 +357,24 @@ class TestRemovedMethods:
 
     def test_no_create_identity_method(self, identity_groups):
         assert not hasattr(identity_groups, "create_identity")
+
+
+# ── list_all ─────────────────────────────────────────────────────────────
+
+
+class TestListAll:
+    """Tests for IdentityGroups.list_all()."""
+
+    def test_delegates_to_paginate_query(self, identity_groups):
+        identity_groups.client.paginate_query.return_value = [{"id": "g1"}]
+        result = identity_groups.list_all()
+        identity_groups.client.paginate_query.assert_called_once_with(
+            "/identityGroups/query", {}
+        )
+        assert result == [{"id": "g1"}]
+
+    def test_passes_kwargs(self, identity_groups):
+        identity_groups.client.paginate_query.return_value = []
+        identity_groups.list_all(dpskPoolId="pool-1")
+        call_data = identity_groups.client.paginate_query.call_args[0][1]
+        assert call_data["dpskPoolId"] == "pool-1"

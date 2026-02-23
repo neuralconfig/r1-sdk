@@ -93,6 +93,11 @@ class IdentityGroups:
             logger.exception(f"Error querying identity groups: {str(e)}")
             raise
     
+    def list_all(self, **kwargs) -> List[Dict[str, Any]]:
+        """Fetch all identity groups using auto-pagination. Returns flat list."""
+        query_data = dict(kwargs)
+        return self.client.paginate_query("/identityGroups/query", query_data)
+
     def get(self, group_id: str) -> Dict[str, Any]:
         """
         Retrieve an identity group by ID.

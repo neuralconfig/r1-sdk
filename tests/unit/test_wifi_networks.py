@@ -534,3 +534,22 @@ class TestConstructor:
         client = MagicMock()
         wn = WiFiNetworks(client)
         assert wn.client is client
+
+
+# ── list_all ─────────────────────────────────────────────────────────────
+
+
+class TestListAll:
+    """Tests for WiFiNetworks.list_all()."""
+
+    def test_delegates_to_paginate_query(self, wifi):
+        wifi.client.paginate_query.return_value = [{"id": "wn1"}]
+        result = wifi.list_all()
+        wifi.client.paginate_query.assert_called_once_with("/wifiNetworks/query", None)
+        assert result == [{"id": "wn1"}]
+
+    def test_passes_query_data(self, wifi):
+        wifi.client.paginate_query.return_value = []
+        q = {"filters": [{"type": "VENUE", "value": "v1"}]}
+        wifi.list_all(query_data=q)
+        wifi.client.paginate_query.assert_called_once_with("/wifiNetworks/query", q)

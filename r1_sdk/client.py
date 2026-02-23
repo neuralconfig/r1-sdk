@@ -241,6 +241,22 @@ class R1Client:
         """Make a DELETE request to the API."""
         return self.request('DELETE', path, **kwargs)
 
+    def paginate_query(self, path: str, query_data: Optional[Dict[str, Any]] = None, page_size: int = 100) -> list:
+        """Auto-paginate a POST /query endpoint. Returns list of all items."""
+        all_data: list = []
+        page = 0
+        base_query = dict(query_data or {})
+        while True:
+            q = {**base_query, "pageSize": page_size, "page": page, "sortOrder": "ASC"}
+            result = self.post(path, data=q)
+            items = result.get("data", [])
+            all_data.extend(items)
+            total = result.get("total", 0)
+            if len(all_data) >= total or not items:
+                break
+            page += 1
+        return all_data
+
     def _init_modules(self):
         """Initialize all API modules."""
         from .modules.venues import Venues

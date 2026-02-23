@@ -45,6 +45,11 @@ class SwitchProfiles:
             logger.exception(f"Error listing switch profiles: {str(e)}")
             raise
 
+    def list_all(self, **kwargs) -> List[Dict[str, Any]]:
+        """Fetch all switch profiles using auto-pagination. Returns flat list."""
+        query_data = dict(kwargs)
+        return self.client.paginate_query("/switchProfiles/query", query_data)
+
     def get(self, profile_id: str) -> Dict[str, Any]:
         """
         Retrieve a switch profile by ID.

@@ -530,3 +530,22 @@ class TestUpdateApManagementVlan:
         aps.client.put.return_value = expected
 
         assert aps.update_ap_management_vlan("v-1", "SN-001", vlanId=1) is expected
+
+
+# ── list_all ─────────────────────────────────────────────────────────────
+
+
+class TestListAll:
+    """Tests for APs.list_all()."""
+
+    def test_delegates_to_paginate_query(self, aps):
+        aps.client.paginate_query.return_value = [{"id": "ap1"}]
+        result = aps.list_all()
+        aps.client.paginate_query.assert_called_once_with("/venues/aps/query", None)
+        assert result == [{"id": "ap1"}]
+
+    def test_passes_query_data(self, aps):
+        aps.client.paginate_query.return_value = []
+        q = {"filters": [{"type": "VENUE", "value": "v1"}]}
+        aps.list_all(query_data=q)
+        aps.client.paginate_query.assert_called_once_with("/venues/aps/query", q)

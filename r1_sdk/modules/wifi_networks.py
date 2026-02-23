@@ -65,6 +65,10 @@ class WiFiNetworks:
             logger.exception(f"Error querying WLANs: {str(e)}")
             raise
     
+    def list_all(self, query_data: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        """Fetch all WiFi networks using auto-pagination. Returns flat list."""
+        return self.client.paginate_query("/wifiNetworks/query", query_data)
+
     def get(self, wlan_id: str) -> Dict[str, Any]:
         """
         Retrieve a WLAN by ID.

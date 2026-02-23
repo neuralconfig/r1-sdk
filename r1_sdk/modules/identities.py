@@ -107,6 +107,11 @@ class Identities:
             logger.exception(f"Error querying identities: {str(e)}")
             raise
     
+    def list_all(self, group_id: str, **kwargs) -> List[Dict[str, Any]]:
+        """Fetch all identities in a group using auto-pagination. Returns flat list."""
+        query_data = dict(kwargs)
+        return self.client.paginate_query(f"/identityGroups/{group_id}/identities/query", query_data)
+
     def create(self, group_id: str,
                name: str,
                email: Optional[str] = None,

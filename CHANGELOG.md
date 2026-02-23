@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.3.0] - 2026-02-23
+
+### Breaking Changes
+- Module renames to match API structure:
+  - `client.wlans` → `client.wifi_networks` (class `WLANs` → `WiFiNetworks`)
+  - `client.vlans` → `client.vlan_pools` (class `VLANs` → `VLANPools`)
+  - `client.l3acl` → `client.l3_acl_policies` (class `L3ACL` → `L3AclPolicies`)
+  - `client.aps` (class `AccessPoints` → `APs`)
+- Methods moved to correct modules:
+  - `client.vlans.list_pools()` → `client.vlan_pools.list()`
+  - `client.vlans.get_pool()` → `client.vlan_pools.get()`
+  - `client.vlans.create_pool()` → `client.vlan_pools.create()`
+
+### Added
+- `list_all()` auto-pagination for modules with POST `/query` endpoints:
+  Venues, APs, Switches, WiFiNetworks, Identities, IdentityGroups, CLITemplates, SwitchProfiles
+- `R1Client.paginate_query()` helper for custom pagination
+- 825 unit tests with 99% coverage
+
+### Backward Compatibility
+- Old attribute names still work: `client.wlans`, `client.vlans`, `client.l3acl`
+- Old class names still importable: `WLANs`, `VLANs`, `AccessPoints`, `L3ACL`
+- Aliases will be removed at 1.0
+
+### Removed
+- Integration tests (replaced by comprehensive unit tests)
+
 ## [0.2.0] - 2026-02-23
 
 ### Breaking Changes

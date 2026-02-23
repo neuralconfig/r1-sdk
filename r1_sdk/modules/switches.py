@@ -71,6 +71,10 @@ class Switches:
             logger.exception(f"Error querying switches: {str(e)}")
             raise
     
+    def list_all(self, query_data: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        """Fetch all switches using auto-pagination. Returns flat list."""
+        return self.client.paginate_query("/venues/switches/query", query_data)
+
     def get(self, venue_id: str, switch_id: str) -> Dict[str, Any]:
         """
         Retrieve a switch by ID.

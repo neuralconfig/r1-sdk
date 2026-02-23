@@ -71,6 +71,10 @@ class APs:
             logger.exception(f"Error querying APs: {str(e)}")
             raise
     
+    def list_all(self, query_data: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        """Fetch all APs using auto-pagination. Returns flat list."""
+        return self.client.paginate_query("/venues/aps/query", query_data)
+
     def get(self, ap_id: str) -> Dict[str, Any]:
         """
         Retrieve an access point by ID.

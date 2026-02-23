@@ -44,6 +44,11 @@ class CLITemplates:
             logger.exception(f"Error listing CLI templates: {str(e)}")
             raise
 
+    def list_all(self, **kwargs) -> List[Dict[str, Any]]:
+        """Fetch all CLI templates using auto-pagination. Returns flat list."""
+        query_data = dict(kwargs)
+        return self.client.paginate_query("/cliTemplates/query", query_data)
+
     def get(self, template_id: str) -> Dict[str, Any]:
         """
         Retrieve a CLI template by ID.

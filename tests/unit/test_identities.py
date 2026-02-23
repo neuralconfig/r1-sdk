@@ -580,3 +580,24 @@ class TestEdgeCases:
         with pytest.raises(ResourceNotFoundError) as exc_info:
             identities.get("g1", "i1")
         assert exc_info.value.status_code == 404
+
+
+# ── list_all ─────────────────────────────────────────────────────────────
+
+
+class TestListAll:
+    """Tests for Identities.list_all()."""
+
+    def test_delegates_to_paginate_query(self, identities):
+        identities.client.paginate_query.return_value = [{"id": "id1"}]
+        result = identities.list_all("g1")
+        identities.client.paginate_query.assert_called_once_with(
+            "/identityGroups/g1/identities/query", {}
+        )
+        assert result == [{"id": "id1"}]
+
+    def test_passes_kwargs(self, identities):
+        identities.client.paginate_query.return_value = []
+        identities.list_all("g1", dpskPoolId="pool-1")
+        call_data = identities.client.paginate_query.call_args[0][1]
+        assert call_data["dpskPoolId"] == "pool-1"

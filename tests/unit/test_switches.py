@@ -626,3 +626,22 @@ class TestConstruction:
         mock = MagicMock()
         s = Switches(mock)
         assert s.client is mock
+
+
+# ── list_all ─────────────────────────────────────────────────────────────
+
+
+class TestListAll:
+    """Tests for Switches.list_all()."""
+
+    def test_delegates_to_paginate_query(self, switches):
+        switches.client.paginate_query.return_value = [{"id": "sw1"}]
+        result = switches.list_all()
+        switches.client.paginate_query.assert_called_once_with("/venues/switches/query", None)
+        assert result == [{"id": "sw1"}]
+
+    def test_passes_query_data(self, switches):
+        switches.client.paginate_query.return_value = []
+        q = {"filters": [{"type": "VENUE", "value": "v1"}]}
+        switches.list_all(query_data=q)
+        switches.client.paginate_query.assert_called_once_with("/venues/switches/query", q)

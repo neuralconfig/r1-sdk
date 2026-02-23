@@ -75,6 +75,15 @@ class Venues:
             logger.exception(f"Error listing venues: {str(e)}")
             raise
     
+    def list_all(self, search_string: Optional[str] = None, sort_field: Optional[str] = None, **kwargs) -> List[Dict[str, Any]]:
+        """Fetch all venues using auto-pagination. Returns flat list."""
+        query_data = dict(kwargs)
+        if search_string:
+            query_data["searchString"] = search_string
+        if sort_field:
+            query_data["sortField"] = sort_field
+        return self.client.paginate_query("/venues/query", query_data)
+
     def get(self, venue_id: str) -> Dict[str, Any]:
         """
         Retrieve a venue by ID.

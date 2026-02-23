@@ -43,10 +43,10 @@ def main():
     for ap in ap_list:
         logger.info(f"  AP: {ap.get('name', 'Unnamed')} (Model: {ap.get('model')}, MAC: {ap.get('apMac')})")
 
-    # List WLANs
-    wlans = client.wlans.list({"pageSize": 10, "page": 0})
-    wlan_list = wlans.get('data', [])
-    logger.info(f"Found {len(wlan_list)} WLANs")
+    # List WiFi networks
+    networks = client.wifi_networks.list({"pageSize": 10, "page": 0})
+    network_list = networks.get('data', [])
+    logger.info(f"Found {len(network_list)} WiFi networks")
 
 
 if __name__ == "__main__":

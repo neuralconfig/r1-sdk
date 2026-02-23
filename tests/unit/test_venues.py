@@ -434,3 +434,28 @@ class TestConstructor:
         client = MagicMock()
         v = Venues(client)
         assert v.client is client
+
+
+# ── list_all ─────────────────────────────────────────────────────────────
+
+
+class TestListAll:
+    """Tests for Venues.list_all()."""
+
+    def test_delegates_to_paginate_query(self, venues):
+        venues.client.paginate_query.return_value = [{"id": "v1"}]
+        result = venues.list_all()
+        venues.client.paginate_query.assert_called_once_with("/venues/query", {})
+        assert result == [{"id": "v1"}]
+
+    def test_passes_search_string(self, venues):
+        venues.client.paginate_query.return_value = []
+        venues.list_all(search_string="HQ")
+        call_data = venues.client.paginate_query.call_args[0][1]
+        assert call_data["searchString"] == "HQ"
+
+    def test_passes_sort_field(self, venues):
+        venues.client.paginate_query.return_value = []
+        venues.list_all(sort_field="name")
+        call_data = venues.client.paginate_query.call_args[0][1]
+        assert call_data["sortField"] == "name"
