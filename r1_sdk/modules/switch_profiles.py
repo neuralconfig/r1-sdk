@@ -1,5 +1,5 @@
 """
-Switch Profiles module for the RUCKUS One API.
+Switch Profiles module for the R1 API.
 
 This module handles switch profile operations such as creating, retrieving,
 updating, and deleting switch profiles, as well as managing their ACLs,
@@ -17,7 +17,7 @@ class SwitchProfiles:
     """
     Switch Profiles API module.
 
-    Handles operations related to switch profiles in the RUCKUS One API.
+    Handles operations related to switch profiles in the R1 API.
     """
 
     def __init__(self, client):
@@ -25,11 +25,9 @@ class SwitchProfiles:
         Initialize the Switch Profiles module.
 
         Args:
-            client: RuckusOneClient instance
+            client: R1Client instance
         """
         self.client = client
-        # Register this module with the client for easier access
-        self.client.switch_profiles = self
 
     def list(self) -> List[Dict[str, Any]]:
         """

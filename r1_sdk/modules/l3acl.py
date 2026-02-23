@@ -1,5 +1,5 @@
 """
-L3ACL module for the RUCKUS One API.
+L3ACL module for the R1 API.
 
 This module handles Layer-3 ACL policy operations such as creating, retrieving, updating, and
 deleting L3 ACL policies.
@@ -18,20 +18,18 @@ MAX_L3ACL_RULES = 128
 class L3ACL:
     """
     L3ACL API module.
-    
-    Handles operations related to Layer-3 ACL policies in the RUCKUS One API.
+
+    Handles operations related to Layer-3 ACL policies in the R1 API.
     """
-    
+
     def __init__(self, client):
         """
         Initialize the L3ACL module.
-        
+
         Args:
-            client: RuckusOneClient instance
+            client: R1Client instance
         """
         self.client = client
-        # Register this module with the client for easier access
-        self.client.l3acl = self
     
     def list(self, query_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """

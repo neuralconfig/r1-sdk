@@ -1,5 +1,5 @@
 """
-VLANs module for the RUCKUS One API.
+VLANs module for the R1 API.
 
 This module handles VLAN operations such as creating, retrieving, updating, and
 configuring VLANs and VLAN pools.
@@ -15,20 +15,18 @@ logger = logging.getLogger(__name__)
 class VLANs:
     """
     VLANs API module.
-    
-    Handles operations related to VLANs and VLAN pools in the RUCKUS One API.
+
+    Handles operations related to VLANs and VLAN pools in the R1 API.
     """
-    
+
     def __init__(self, client):
         """
         Initialize the VLANs module.
-        
+
         Args:
-            client: RuckusOneClient instance
+            client: R1Client instance
         """
         self.client = client
-        # Register this module with the client for easier access
-        self.client.vlans = self
     
     def list_pools(self, query_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """

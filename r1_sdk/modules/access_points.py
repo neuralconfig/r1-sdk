@@ -1,5 +1,5 @@
 """
-Access Points module for the RUCKUS One API.
+Access Points module for the R1 API.
 
 This module handles access point (AP) operations such as retrieving, configuring,
 and monitoring APs.
@@ -15,20 +15,18 @@ logger = logging.getLogger(__name__)
 class AccessPoints:
     """
     Access Points API module.
-    
-    Handles operations related to access points in the RUCKUS One API.
+
+    Handles operations related to access points in the R1 API.
     """
-    
+
     def __init__(self, client):
         """
         Initialize the AccessPoints module.
-        
+
         Args:
-            client: RuckusOneClient instance
+            client: R1Client instance
         """
         self.client = client
-        # Register this module with the client for easier access
-        self.client.aps = self
     
     def list(self, query_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """

@@ -1,5 +1,5 @@
 """
-Venues module for the RUCKUS One API.
+Venues module for the R1 API.
 
 This module handles venue management operations such as creating, retrieving,
 updating, and deleting venues.
@@ -15,20 +15,18 @@ logger = logging.getLogger(__name__)
 class Venues:
     """
     Venues API module.
-    
-    Handles operations related to venues in the RUCKUS One API.
+
+    Handles operations related to venues in the R1 API.
     """
-    
+
     def __init__(self, client):
         """
         Initialize the Venues module.
-        
+
         Args:
-            client: RuckusOneClient instance
+            client: R1Client instance
         """
         self.client = client
-        # Register this module with the client for easier access
-        self.client.venues = self
     
     def list(self, 
              search_string: Optional[str] = None, 

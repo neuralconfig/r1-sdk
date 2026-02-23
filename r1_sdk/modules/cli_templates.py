@@ -1,5 +1,5 @@
 """
-CLI Templates module for the RUCKUS One API.
+CLI Templates module for the R1 API.
 
 This module handles CLI template operations such as creating, retrieving,
 updating, and deleting command-line interface templates for switches.
@@ -16,7 +16,7 @@ class CLITemplates:
     """
     CLI Templates API module.
 
-    Handles operations related to CLI templates in the RUCKUS One API.
+    Handles operations related to CLI templates in the R1 API.
     """
 
     def __init__(self, client):
@@ -24,11 +24,9 @@ class CLITemplates:
         Initialize the CLI Templates module.
 
         Args:
-            client: RuckusOneClient instance
+            client: R1Client instance
         """
         self.client = client
-        # Register this module with the client for easier access
-        self.client.cli_templates = self
 
     def list(self) -> List[Dict[str, Any]]:
         """

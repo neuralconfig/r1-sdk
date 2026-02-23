@@ -1,8 +1,8 @@
 """
-RUCKUS One API SDK modules.
+R1 API SDK modules.
 
-This package contains the various API modules for interacting with different
-aspects of the RUCKUS One API.
+This package contains the API modules for interacting with different
+aspects of the R1 API.
 """
 
 from .venues import Venues
@@ -13,6 +13,9 @@ from .vlans import VLANs
 from .dpsk import DPSK
 from .identity_groups import IdentityGroups
 from .identities import Identities
+from .l3acl import L3ACL
+from .cli_templates import CLITemplates
+from .switch_profiles import SwitchProfiles
 
 __all__ = [
     'Venues',
@@ -22,5 +25,8 @@ __all__ = [
     'VLANs',
     'DPSK',
     'IdentityGroups',
-    'Identities'
+    'Identities',
+    'L3ACL',
+    'CLITemplates',
+    'SwitchProfiles',
 ]

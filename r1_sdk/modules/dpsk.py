@@ -1,5 +1,5 @@
 """
-DPSK (Dynamic Pre-Shared Key) management module for the RUCKUS One API.
+DPSK (Dynamic Pre-Shared Key) management module for the R1 API.
 
 This module provides functionality for managing DPSK services, passphrases,
 and device associations.
@@ -13,20 +13,19 @@ logger = logging.getLogger(__name__)
 
 class DPSK:
     """
-    DPSK management for the RUCKUS One API.
-    
+    DPSK management for the R1 API.
+
     Provides methods for managing DPSK services, passphrases, and device associations.
     """
-    
+
     def __init__(self, client):
         """
         Initialize the DPSK module.
-        
+
         Args:
-            client: RuckusOneClient instance
+            client: R1Client instance
         """
         self.client = client
-        client.dpsk = self
         
     def list_services(self, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """

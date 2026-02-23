@@ -1,5 +1,5 @@
 """
-Switches module for the RUCKUS One API.
+Switches module for the R1 API.
 
 This module handles switch operations such as retrieving, configuring, and
 monitoring switches.
@@ -15,20 +15,18 @@ logger = logging.getLogger(__name__)
 class Switches:
     """
     Switches API module.
-    
-    Handles operations related to switches in the RUCKUS One API.
+
+    Handles operations related to switches in the R1 API.
     """
-    
+
     def __init__(self, client):
         """
         Initialize the Switches module.
-        
+
         Args:
-            client: RuckusOneClient instance
+            client: R1Client instance
         """
         self.client = client
-        # Register this module with the client for easier access
-        self.client.switches = self
     
     def list(self, query_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """

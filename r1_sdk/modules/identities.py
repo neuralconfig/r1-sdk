@@ -1,5 +1,5 @@
 """
-Identities module for the RUCKUS One API.
+Identities module for the R1 API.
 
 This module handles identity management operations such as creating, retrieving,
 updating, and deleting identities across all identity groups.
@@ -15,20 +15,18 @@ logger = logging.getLogger(__name__)
 class Identities:
     """
     Identities API module.
-    
-    Handles operations related to identities in the RUCKUS One API.
+
+    Handles operations related to identities in the R1 API.
     """
-    
+
     def __init__(self, client):
         """
         Initialize the Identities module.
-        
+
         Args:
-            client: RuckusOneClient instance
+            client: R1Client instance
         """
         self.client = client
-        # Register this module with the client for easier access
-        self.client.identities = self
     
     def list(self, 
              page: int = 0,
@@ -113,7 +111,7 @@ class Identities:
         """
         Retrieve an identity by ID within a specific group.
         
-        Note: The RUCKUS One API requires the group ID to access individual identities.
+        Note: The R1 API requires the group ID to access individual identities.
         
         Args:
             group_id: ID of the identity group

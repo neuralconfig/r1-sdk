@@ -1,5 +1,5 @@
 """
-WLANs module for the RUCKUS One API.
+WLANs module for the R1 API.
 
 This module handles WLAN (WiFi network) operations such as creating, retrieving,
 updating, and deploying wireless networks.
@@ -15,20 +15,18 @@ logger = logging.getLogger(__name__)
 class WLANs:
     """
     WLANs API module.
-    
-    Handles operations related to wireless networks in the RUCKUS One API.
+
+    Handles operations related to wireless networks in the R1 API.
     """
-    
+
     def __init__(self, client):
         """
         Initialize the WLANs module.
-        
+
         Args:
-            client: RuckusOneClient instance
+            client: R1Client instance
         """
         self.client = client
-        # Register this module with the client for easier access
-        self.client.wlans = self
     
     def list(self, query_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """

@@ -1,5 +1,5 @@
 """
-Identity Groups module for the RUCKUS One API.
+Identity Groups module for the R1 API.
 
 This module handles identity group management operations such as creating, retrieving,
 updating, and deleting identity groups.
@@ -15,20 +15,18 @@ logger = logging.getLogger(__name__)
 class IdentityGroups:
     """
     Identity Groups API module.
-    
-    Handles operations related to identity groups in the RUCKUS One API.
+
+    Handles operations related to identity groups in the R1 API.
     """
-    
+
     def __init__(self, client):
         """
         Initialize the Identity Groups module.
-        
+
         Args:
-            client: RuckusOneClient instance
+            client: R1Client instance
         """
         self.client = client
-        # Register this module with the client for easier access
-        self.client.identity_groups = self
     
     def list(self) -> Dict[str, Any]:
         """
