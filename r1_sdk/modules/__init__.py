@@ -6,27 +6,38 @@ aspects of the R1 API.
 """
 
 from .venues import Venues
-from .access_points import AccessPoints
+from .aps import APs
 from .switches import Switches
-from .wlans import WLANs
-from .vlans import VLANs
+from .wifi_networks import WiFiNetworks
+from .vlan_pools import VLANPools
 from .dpsk import DPSK
 from .identity_groups import IdentityGroups
 from .identities import Identities
-from .l3acl import L3ACL
+from .l3_acl_policies import L3AclPolicies
 from .cli_templates import CLITemplates
 from .switch_profiles import SwitchProfiles
 
+# Backward compat aliases — remove at 1.0
+AccessPoints = APs
+WLANs = WiFiNetworks
+VLANs = VLANPools
+L3ACL = L3AclPolicies
+
 __all__ = [
     'Venues',
-    'AccessPoints',
+    'APs',
     'Switches',
-    'WLANs',
-    'VLANs',
+    'WiFiNetworks',
+    'VLANPools',
     'DPSK',
     'IdentityGroups',
     'Identities',
-    'L3ACL',
+    'L3AclPolicies',
     'CLITemplates',
     'SwitchProfiles',
+    # Backward compat aliases
+    'AccessPoints',
+    'WLANs',
+    'VLANs',
+    'L3ACL',
 ]

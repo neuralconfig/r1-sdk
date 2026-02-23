@@ -281,17 +281,14 @@ def configure_syslog(venue_id, switch_id, syslog_settings)
 
 ### Testing Requirements
 - Create test cases for each new endpoint
-- Mock API responses for unit tests
-- Add integration tests using real API credentials
-- Update existing test suites in `test_modules/`
-- Create specific test scripts for complex features
+- Mock API responses for unit tests in `tests/unit/`
+- Add integration tests using real API credentials in `tests/integration/`
+- Use pytest fixtures and markers (`@pytest.mark.integration`)
 
 ### CLI Integration
-- Add new commands to `cli/interactive.py`
+- CLI commands live in the separate `r1-tools` repository
+- Add new commands there following existing patterns
 - Follow the existing command hierarchy pattern
-- Implement context-sensitive help with `?`
-- Add tab completion for new commands
-- Create mode-specific command sets for complex features
 
 ### Documentation Updates
 - Update module docstrings with new capabilities

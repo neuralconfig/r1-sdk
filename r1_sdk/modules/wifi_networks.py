@@ -1,7 +1,7 @@
 """
-WLANs module for the R1 API.
+WiFi Networks module for the R1 API.
 
-This module handles WLAN (WiFi network) operations such as creating, retrieving,
+This module handles WiFi network operations such as creating, retrieving,
 updating, and deploying wireless networks.
 """
 
@@ -12,16 +12,16 @@ from ..exceptions import ResourceNotFoundError
 logger = logging.getLogger(__name__)
 
 
-class WLANs:
+class WiFiNetworks:
     """
-    WLANs API module.
+    WiFi Networks API module.
 
     Handles operations related to wireless networks in the R1 API.
     """
 
     def __init__(self, client):
         """
-        Initialize the WLANs module.
+        Initialize the WiFiNetworks module.
 
         Args:
             client: R1Client instance
@@ -324,3 +324,19 @@ class WLANs:
             raise ResourceNotFoundError(
                 message=f"WLAN with ID {wlan_id} not deployed in venue {venue_id}"
             )
+
+    def associate_dpsk_service(self, wlan_id: str, dpsk_service_id: str) -> Dict[str, Any]:
+        """
+        Associate a DPSK service with a WiFi network.
+
+        Args:
+            wlan_id: The WiFi network ID
+            dpsk_service_id: The DPSK service ID
+
+        Returns:
+            Association response
+        """
+        path = f"/wifiNetworks/{wlan_id}/dpskServices/{dpsk_service_id}"
+
+        logger.debug(f"Associating DPSK service {dpsk_service_id} with WiFi network {wlan_id}")
+        return self.client.put(path, {})

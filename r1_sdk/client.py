@@ -244,28 +244,33 @@ class R1Client:
     def _init_modules(self):
         """Initialize all API modules."""
         from .modules.venues import Venues
-        from .modules.access_points import AccessPoints
+        from .modules.aps import APs
         from .modules.switches import Switches
-        from .modules.wlans import WLANs
-        from .modules.vlans import VLANs
+        from .modules.wifi_networks import WiFiNetworks
+        from .modules.vlan_pools import VLANPools
         from .modules.dpsk import DPSK
         from .modules.identity_groups import IdentityGroups
         from .modules.identities import Identities
-        from .modules.l3acl import L3ACL
+        from .modules.l3_acl_policies import L3AclPolicies
         from .modules.cli_templates import CLITemplates
         from .modules.switch_profiles import SwitchProfiles
 
         self.venues = Venues(self)
-        self.aps = AccessPoints(self)
+        self.aps = APs(self)
         self.switches = Switches(self)
-        self.wlans = WLANs(self)
-        self.vlans = VLANs(self)
+        self.wifi_networks = WiFiNetworks(self)
+        self.vlan_pools = VLANPools(self)
         self.dpsk = DPSK(self)
         self.identity_groups = IdentityGroups(self)
         self.identities = Identities(self)
-        self.l3acl = L3ACL(self)
+        self.l3_acl_policies = L3AclPolicies(self)
         self.cli_templates = CLITemplates(self)
         self.switch_profiles = SwitchProfiles(self)
+
+        # Backward compat aliases — remove at 1.0
+        self.wlans = self.wifi_networks
+        self.vlans = self.vlan_pools
+        self.l3acl = self.l3_acl_policies
 
         logger.debug("All API modules initialized successfully")
 

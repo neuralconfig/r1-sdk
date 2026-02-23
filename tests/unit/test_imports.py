@@ -4,7 +4,7 @@ import r1_sdk
 
 
 def test_version():
-    assert r1_sdk.__version__ == "0.2.0"
+    assert r1_sdk.__version__ == "0.3.0"
 
 
 def test_client_exports():
@@ -35,21 +35,29 @@ def test_exception_exports():
 def test_module_exports():
     from r1_sdk import (
         Venues,
-        AccessPoints,
+        APs,
         Switches,
-        WLANs,
-        VLANs,
+        WiFiNetworks,
+        VLANPools,
         DPSK,
         Identities,
         IdentityGroups,
-        L3ACL,
+        L3AclPolicies,
         CLITemplates,
         SwitchProfiles,
     )
-    # All should be classes
-    for cls in [Venues, AccessPoints, Switches, WLANs, VLANs,
-                DPSK, Identities, IdentityGroups, L3ACL, CLITemplates, SwitchProfiles]:
+    for cls in [Venues, APs, Switches, WiFiNetworks, VLANPools,
+                DPSK, Identities, IdentityGroups, L3AclPolicies, CLITemplates, SwitchProfiles]:
         assert isinstance(cls, type)
+
+
+def test_backward_compat_aliases():
+    from r1_sdk import AccessPoints, WLANs, VLANs, L3ACL
+    from r1_sdk import APs, WiFiNetworks, VLANPools, L3AclPolicies
+    assert AccessPoints is APs
+    assert WLANs is WiFiNetworks
+    assert VLANs is VLANPools
+    assert L3ACL is L3AclPolicies
 
 
 def test_all_list():

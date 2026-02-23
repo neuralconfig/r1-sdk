@@ -402,20 +402,3 @@ class DPSK:
         
         return response.text
         
-    # Network Association
-    
-    def associate_with_wlan(self, wlan_id: str, dpsk_service_id: str) -> Dict[str, Any]:
-        """
-        Associate a DPSK service with a WiFi network.
-        
-        Args:
-            wlan_id: The WiFi network ID
-            dpsk_service_id: The DPSK service ID
-            
-        Returns:
-            Association response
-        """
-        path = f"/wifiNetworks/{wlan_id}/dpskServices/{dpsk_service_id}"
-        
-        logger.debug(f"Associating DPSK service {dpsk_service_id} with WLAN {wlan_id}")
-        return self.client.put(path, {})

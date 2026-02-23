@@ -29,7 +29,7 @@ classifiers = [
 dependencies = ["requests>=2.25.0"]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0", "pytest-mock>=3.0", "coverage>=7.0", "build", "twine"]
+dev = ["pytest>=7.0", "pytest-mock>=3.0", "pytest-cov>=4.0", "coverage>=7.0", "build", "twine"]
 
 [project.urls]
 Homepage = "https://github.com/neuralconfig/r1-sdk"
@@ -40,6 +40,13 @@ version = {attr = "r1_sdk.__version__"}
 
 [tool.setuptools.packages.find]
 include = ["r1_sdk*"]
+
+[tool.coverage.run]
+source = ["r1_sdk"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]

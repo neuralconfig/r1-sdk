@@ -1,8 +1,8 @@
 """
-Access Points module for the R1 API.
+APs module for the R1 API.
 
 This module handles access point (AP) operations such as retrieving, configuring,
-and monitoring APs.
+and monitoring APs, including management VLAN settings.
 """
 
 import logging
@@ -12,16 +12,16 @@ from ..exceptions import ResourceNotFoundError
 logger = logging.getLogger(__name__)
 
 
-class AccessPoints:
+class APs:
     """
-    Access Points API module.
+    APs API module.
 
     Handles operations related to access points in the R1 API.
     """
 
     def __init__(self, client):
         """
-        Initialize the AccessPoints module.
+        Initialize the APs module.
 
         Args:
             client: R1Client instance
@@ -289,3 +289,91 @@ class AccessPoints:
                 raise ResourceNotFoundError(message=f"AP group with ID {ap_group_id} not found")
             else:
                 raise ResourceNotFoundError(message=f"Venue with ID {venue_id} not found")
+
+    def get_venue_ap_management_vlan(self, venue_id: str) -> Dict[str, Any]:
+        """
+        Get AP management VLAN settings for a venue.
+
+        Args:
+            venue_id: ID of the venue
+
+        Returns:
+            Dict containing AP management VLAN settings
+
+        Raises:
+            ResourceNotFoundError: If the venue does not exist
+        """
+        try:
+            return self.client.get(f"/venues/{venue_id}/apManagementTrafficVlanSettings")
+        except ResourceNotFoundError:
+            raise ResourceNotFoundError(message=f"Venue with ID {venue_id} not found")
+
+    def update_venue_ap_management_vlan(self, venue_id: str, **kwargs) -> Dict[str, Any]:
+        """
+        Update AP management VLAN settings for a venue.
+
+        Args:
+            venue_id: ID of the venue
+            **kwargs: VLAN settings to update
+
+        Returns:
+            Dict containing the updated VLAN settings
+
+        Raises:
+            ResourceNotFoundError: If the venue does not exist
+        """
+        try:
+            return self.client.put(
+                f"/venues/{venue_id}/apManagementTrafficVlanSettings",
+                data=kwargs
+            )
+        except ResourceNotFoundError:
+            raise ResourceNotFoundError(message=f"Venue with ID {venue_id} not found")
+
+    def get_ap_management_vlan(self, venue_id: str, ap_serial: str) -> Dict[str, Any]:
+        """
+        Get AP management VLAN settings for a specific AP.
+
+        Args:
+            venue_id: ID of the venue
+            ap_serial: Serial number of the AP
+
+        Returns:
+            Dict containing AP management VLAN settings
+
+        Raises:
+            ResourceNotFoundError: If the venue or AP does not exist
+        """
+        try:
+            return self.client.get(
+                f"/venues/{venue_id}/aps/{ap_serial}/managementTrafficVlanSettings"
+            )
+        except ResourceNotFoundError:
+            raise ResourceNotFoundError(
+                message=f"AP with serial number {ap_serial} not found in venue {venue_id}"
+            )
+
+    def update_ap_management_vlan(self, venue_id: str, ap_serial: str, **kwargs) -> Dict[str, Any]:
+        """
+        Update AP management VLAN settings for a specific AP.
+
+        Args:
+            venue_id: ID of the venue
+            ap_serial: Serial number of the AP
+            **kwargs: VLAN settings to update
+
+        Returns:
+            Dict containing the updated VLAN settings
+
+        Raises:
+            ResourceNotFoundError: If the venue or AP does not exist
+        """
+        try:
+            return self.client.put(
+                f"/venues/{venue_id}/aps/{ap_serial}/managementTrafficVlanSettings",
+                data=kwargs
+            )
+        except ResourceNotFoundError:
+            raise ResourceNotFoundError(
+                message=f"AP with serial number {ap_serial} not found in venue {venue_id}"
+            )

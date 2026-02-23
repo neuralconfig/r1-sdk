@@ -7,7 +7,7 @@ updating, and deleting identity groups.
 
 import logging
 from typing import Dict, List, Optional, Any, Union
-from ..exceptions import ResourceNotFoundError, ValidationError
+from ..exceptions import ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -228,75 +228,3 @@ class IdentityGroups:
         except ResourceNotFoundError:
             raise ResourceNotFoundError(message=f"Identity group with ID {group_id} not found")
     
-    def get_identity(self, group_id: str, identity_id: str) -> Dict[str, Any]:
-        """
-        Get a specific identity within an identity group.
-        
-        Args:
-            group_id: ID of the identity group
-            identity_id: ID of the identity
-            
-        Returns:
-            Dict containing identity details
-            
-        Raises:
-            ResourceNotFoundError: If the identity group or identity does not exist
-        """
-        try:
-            return self.client.get(f"/identityGroups/{group_id}/identities/{identity_id}")
-        except ResourceNotFoundError:
-            raise ResourceNotFoundError(message=f"Identity group {group_id} or identity {identity_id} not found")
-    
-    def create_identity(self, group_id: str,
-                       name: str,
-                       email: Optional[str] = None,
-                       description: Optional[str] = None,
-                       expiration_date: Optional[str] = None,
-                       vlan: Optional[int] = None,
-                       devices: Optional[List[Dict[str, Any]]] = None,
-                       **kwargs) -> Dict[str, Any]:
-        """
-        Create a new identity within an identity group.
-        
-        Args:
-            group_id: ID of the identity group
-            name: Name of the identity
-            email: Optional email address
-            description: Optional description
-            expiration_date: Optional expiration date (ISO format)
-            vlan: Optional VLAN assignment (1-4094)
-            devices: Optional list of devices to associate
-            **kwargs: Additional identity properties
-            
-        Returns:
-            Dict containing the created identity details
-            
-        Raises:
-            ResourceNotFoundError: If the identity group does not exist
-            ValidationError: If the data is invalid
-        """
-        data = {
-            "name": name
-        }
-        
-        if email:
-            data["email"] = email
-        if description:
-            data["description"] = description
-        if expiration_date:
-            data["expirationDate"] = expiration_date
-        if vlan is not None:
-            if not 1 <= vlan <= 4094:
-                raise ValidationError(detail="VLAN must be between 1 and 4094")
-            data["vlan"] = vlan
-        if devices:
-            data["devices"] = devices
-            
-        # Add any additional properties
-        data.update(kwargs)
-        
-        logger.debug(f"Creating identity in group {group_id} with data: {data}")
-        try:
-            return self.client.post(f"/identityGroups/{group_id}/identities", data=data)
-        except ResourceNotFoundError:
-            raise ResourceNotFoundError(message=f"Identity group with ID {group_id} not found")

@@ -1,5 +1,5 @@
 """
-L3ACL module for the R1 API.
+L3 ACL Policies module for the R1 API.
 
 This module handles Layer-3 ACL policy operations such as creating, retrieving, updating, and
 deleting L3 ACL policies.
@@ -15,16 +15,16 @@ logger = logging.getLogger(__name__)
 MAX_L3ACL_RULES = 128
 
 
-class L3ACL:
+class L3AclPolicies:
     """
-    L3ACL API module.
+    L3 ACL Policies API module.
 
     Handles operations related to Layer-3 ACL policies in the R1 API.
     """
 
     def __init__(self, client):
         """
-        Initialize the L3ACL module.
+        Initialize the L3AclPolicies module.
 
         Args:
             client: R1Client instance
