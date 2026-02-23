@@ -2,6 +2,12 @@
 
 Cross-session tracking for SDK features needed by r1-tools or other consumers.
 
+## Completed
+
+- [x] Module renames: `wlans` → `wifi_networks`, `vlans` → `vlan_pools`, `l3acl` → `l3_acl_policies`, `AccessPoints` → `APs` (0.3.0)
+- [x] `list_all()` auto-pagination for 8 modules (0.3.0)
+- [x] 846 unit tests, 99% coverage (0.3.0)
+
 ## Requested Features
 
 _None yet._

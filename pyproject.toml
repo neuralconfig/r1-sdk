@@ -51,6 +51,5 @@ skip_empty = true
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]
 markers = [
-    "integration: requires live API credentials",
     "unit: pure unit tests with mocks",
 ]

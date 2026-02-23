@@ -2,7 +2,7 @@
 
 A Python SDK for the RUCKUS One (R1) network management platform API.
 
-> **Alpha** — This SDK covers ~5% of the R1 API (1528 operations). Core modules for venues, APs, switches, WiFi networks, VLAN pools, DPSK, identities, and L3 ACL policies are implemented. See [API Coverage](#api-coverage) for details.
+> **Alpha** — This SDK covers ~8% of the R1 API (1,491 operations across 203 tag groups). Core modules for venues, APs, switches, WiFi networks, VLAN pools, DPSK, identities, L3 ACL policies, CLI templates, and switch profiles are implemented. See [API Coverage](#api-coverage) for details.
 
 ## Installation
 
@@ -78,18 +78,24 @@ client = R1Client.from_env()
 
 ## API Coverage
 
-The R1 API has **1528 operations** across **29 tag groups**. Current SDK coverage:
+The R1 API has **1,491 operations** across **203 tag groups**. The SDK covers **112 operations (~8%)** with full or partial coverage of 29 tag groups:
 
-| Tag Group | Operations | Coverage |
-|-----------|-----------|----------|
-| Wi-Fi API & Model Docs | 625 | ~5% |
-| Switch Services | 244 | ~10% |
-| DPSK Service | 34 | ~70% |
-| Identity Management | 27 | ~60% |
-| Venues | 20 | ~40% |
-| Configuration Templates | 6 | ~20% |
-| Tenant Management | 31 | <5% |
-| 22 other groups | 541 | None |
+| Tag Group | Spec Ops | SDK Ops | Coverage |
+|-----------|----------|---------|----------|
+| CLI Templates | 10 | 10 | 100% |
+| Switch Profiles | 10 | 10 | 100% |
+| DPSK Passphrases | 14 | 11 | 79% |
+| Identity Groups | 11 | 8 | 73% |
+| Identities | 15 | 10 | 67% |
+| Venues | 7 | 4 | 57% |
+| VLAN Pools | 17 | 9 | 53% |
+| L3 ACL Policies | 10 | 4 | 40% |
+| DPSK Services | 11 | 5 | 45% |
+| Switch VLANs | 19 | 4 | 21% |
+| Switches | 20 | 4 | 20% |
+| WiFi Networks | 24 | 4 | 17% |
+| APs | 106 | 7 | 7% |
+| 174 other groups | 1,077 | 0 | 0% |
 
 ## Error Handling
 
