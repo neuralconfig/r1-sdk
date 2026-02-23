@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neuralconfig-r1-sdk"
+dynamic = ["version"]
+description = "Python SDK for the RUCKUS One (R1) network management platform"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+    { name = "neuralconfig" }
+]
+keywords = ["ruckus", "ruckus-one", "r1", "wifi", "networking", "api", "sdk"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Networking",
+]
+dependencies = ["requests>=2.25.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "pytest-mock>=3.0", "pytest-cov>=4.0", "coverage>=7.0", "build", "twine"]
+
+[project.urls]
+Homepage = "https://github.com/neuralconfig/r1-sdk"
+Repository = "https://github.com/neuralconfig/r1-sdk"
+
+[tool.setuptools.dynamic]
+version = {attr = "r1_sdk.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["r1_sdk*"]
+
+[tool.coverage.run]
+source = ["r1_sdk"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+markers = [
+    "unit: pure unit tests with mocks",
+]

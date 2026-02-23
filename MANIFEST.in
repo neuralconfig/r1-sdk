@@ -1,0 +1,6 @@
+include LICENSE
+include README.md
+include r1_sdk/py.typed
+recursive-exclude tests *
+recursive-exclude openapi-specs *
+recursive-exclude examples *
