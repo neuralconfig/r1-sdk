@@ -4,7 +4,7 @@ R1 Python SDK
 A Python SDK for interacting with the RUCKUS One (R1) network management platform API.
 """
 
-__version__ = "0.3.0"
+__version__ = "0.4.1"
 
 from .client import R1Client
 from .exceptions import (

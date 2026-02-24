@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.1] - 2026-02-24
+
+### Breaking Changes
+- **WiFiNetworks:** `create()` rewritten to use correct API payload structure (nested `wlan` object with `type`, `wlanSecurity`, `passphrase` fields)
+- **WiFiNetworks:** `deploy_to_venue()` changed from `POST /venues/{id}/networks` to `PUT /venues/{id}/wifiNetworks/{id}` — signature changed from `(wlan_id, venue_id, ap_group_id)` to `(wlan_id, venue_id, is_all_ap_groups)`
+- **WiFiNetworks:** `undeploy_from_venue()`, `get_venue_wlan_settings()`, `update_venue_wlan_settings()` — endpoints updated from `/networks/` to `/wifiNetworks/`, removed `ap_group_id` parameter
+- **WiFiNetworks:** `list_venue_wlans()` endpoint changed from `/venues/networks/query` to `/venues/wifiNetworks/query`
+
+### Added
+- **WiFiNetworks:** `SECURITY_TYPE_MAP` for mapping friendly security type names (e.g., `"psk"`, `"wpa3-psk"`, `"owe"`) to API values
+- **WiFiNetworks:** `create()` now accepts `passphrase`, `enabled`, `wlan_options`, and `advanced_options` parameters
+- **APs:** `add_to_venue()` method for preprovisioning APs
+
+### Fixed
+- **Switches:** `add_to_venue()` now sends array payload (`[switch_data]`) as required by the API
+
 ## [0.3.0] - 2026-02-23
 
 ### Breaking Changes

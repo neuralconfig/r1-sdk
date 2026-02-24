@@ -294,6 +294,44 @@ class APs:
             else:
                 raise ResourceNotFoundError(message=f"Venue with ID {venue_id} not found")
 
+    def add_to_venue(self, venue_id: str, serial_number: str, name: str,
+                     description: str = None, model: str = None) -> Dict[str, Any]:
+        """
+        Add/preprovision an access point to a venue.
+
+        Args:
+            venue_id: ID of the venue to add the AP to
+            serial_number: Serial number of the AP
+            name: Name for the AP (required)
+            description: Optional description for the AP
+            model: Optional AP model
+
+        Returns:
+            Dict containing the created AP details
+
+        Raises:
+            ResourceNotFoundError: If the venue does not exist
+        """
+        logger.debug(f"Adding AP {serial_number} to venue {venue_id}")
+
+        ap_data = {
+            "serialNumber": serial_number,
+            "name": name
+        }
+
+        if description:
+            ap_data["description"] = description
+        if model:
+            ap_data["model"] = model
+
+        try:
+            result = self.client.post(f"/venues/{venue_id}/aps", data=ap_data)
+            logger.debug(f"AP addition successful: {result}")
+            return result
+        except Exception as e:
+            logger.exception(f"Error adding AP to venue: {str(e)}")
+            raise
+
     def get_venue_ap_management_vlan(self, venue_id: str) -> Dict[str, Any]:
         """
         Get AP management VLAN settings for a venue.
