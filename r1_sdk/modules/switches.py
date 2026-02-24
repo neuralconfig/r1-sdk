@@ -447,8 +447,9 @@ class Switches:
         # Add any additional parameters
         switch_data.update(kwargs)
 
+        # API expects an array of switch objects
         try:
-            result = self.client.post(endpoint, data=switch_data)
+            result = self.client.post(endpoint, data=[switch_data])
             logger.debug(f"Switch addition successful: {result}")
             return result
         except Exception as e:
