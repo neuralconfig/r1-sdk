@@ -342,6 +342,24 @@ class Switches:
             logger.exception(f"Error deleting VLAN: {str(e)}")
             raise
     
+    def remove_from_venue(self, venue_id: str, serial_number: str) -> None:
+        """
+        Remove a switch from a venue.
+
+        Args:
+            venue_id: ID of the venue
+            serial_number: Serial number of the switch to remove
+
+        Raises:
+            ResourceNotFoundError: If the venue or switch does not exist
+        """
+        try:
+            self.client.delete(f"/venues/{venue_id}/switches/{serial_number}")
+        except ResourceNotFoundError:
+            raise ResourceNotFoundError(
+                message=f"Switch with serial number {serial_number} not found in venue {venue_id}"
+            )
+
     def get_statistics(self, venue_id: str, switch_id: str) -> Dict[str, Any]:
         """
         Get statistics for a switch.

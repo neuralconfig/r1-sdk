@@ -4,7 +4,7 @@ R1 Python SDK
 A Python SDK for interacting with the RUCKUS One (R1) network management platform API.
 """
 
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 
 from .client import R1Client
 from .exceptions import (
@@ -27,6 +27,8 @@ from .modules.identity_groups import IdentityGroups
 from .modules.l3_acl_policies import L3AclPolicies
 from .modules.cli_templates import CLITemplates
 from .modules.switch_profiles import SwitchProfiles
+from .modules.radius_server_profiles import RadiusServerProfiles
+from .modules.certificate_templates import CertificateTemplates
 
 # Backward compatibility aliases
 from .client import RuckusOneClient
@@ -63,6 +65,8 @@ __all__ = [
     "L3AclPolicies",
     "CLITemplates",
     "SwitchProfiles",
+    "RadiusServerProfiles",
+    "CertificateTemplates",
     # Backward compat aliases
     "AccessPoints",
     "WLANs",

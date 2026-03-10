@@ -332,6 +332,40 @@ class APs:
             logger.exception(f"Error adding AP to venue: {str(e)}")
             raise
 
+    def remove_from_venue(self, venue_id: str, serial_number: str) -> None:
+        """
+        Remove an access point from a venue.
+
+        Args:
+            venue_id: ID of the venue
+            serial_number: Serial number of the AP to remove
+
+        Raises:
+            ResourceNotFoundError: If the venue or AP does not exist
+        """
+        try:
+            self.client.delete(f"/venues/{venue_id}/aps/{serial_number}")
+        except ResourceNotFoundError:
+            raise ResourceNotFoundError(
+                message=f"AP with serial number {serial_number} not found in venue {venue_id}"
+            )
+
+    def get_support_logs(self, venue_id: str, serial_number: str):
+        """
+        Request support log generation for an AP.
+
+        Args:
+            venue_id: ID of the venue containing the AP
+            serial_number: Serial number of the AP
+
+        Returns:
+            Raw response object (use response.json() to get download URL)
+        """
+        return self.client.get(
+            f"/venues/{venue_id}/aps/{serial_number}/logs",
+            raw_response=True,
+        )
+
     def get_venue_ap_management_vlan(self, venue_id: str) -> Dict[str, Any]:
         """
         Get AP management VLAN settings for a venue.

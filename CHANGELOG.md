@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.2] - 2026-03-10
+
+### Added
+- **RadiusServerProfiles:** New module — `list()`, `query()`, `get()`, `get_for_wifi_network()`
+- **CertificateTemplates:** New module — `query()`, `get()`, `get_for_wifi_network()`
+- **WiFiNetworks:** `get_radius_proxy_settings()` method
+- **APs:** `remove_from_venue()` and `get_support_logs()` methods
+- **Switches:** `remove_from_venue()` method
+
 ## [0.4.1] - 2026-02-24
 
 ### Breaking Changes
@@ -50,7 +59,7 @@
 - Import path changed from `ruckus_one` to `r1_sdk`
 - Main client class renamed from `RuckusOneClient` to `R1Client`
 - Base exception renamed from `RuckusOneError` to `R1Error`
-- CLI removed (use [r1-tools](https://github.com/neuralconfig/r1-tools) for scripts)
+- CLI removed (use [r1-scripts](https://github.com/neuralconfig/r1-scripts) for scripts)
 - `cmd2` dependency removed
 
 ### Added

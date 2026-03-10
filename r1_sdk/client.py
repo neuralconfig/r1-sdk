@@ -270,6 +270,8 @@ class R1Client:
         from .modules.l3_acl_policies import L3AclPolicies
         from .modules.cli_templates import CLITemplates
         from .modules.switch_profiles import SwitchProfiles
+        from .modules.radius_server_profiles import RadiusServerProfiles
+        from .modules.certificate_templates import CertificateTemplates
 
         self.venues = Venues(self)
         self.aps = APs(self)
@@ -282,6 +284,8 @@ class R1Client:
         self.l3_acl_policies = L3AclPolicies(self)
         self.cli_templates = CLITemplates(self)
         self.switch_profiles = SwitchProfiles(self)
+        self.radius_server_profiles = RadiusServerProfiles(self)
+        self.certificate_templates = CertificateTemplates(self)
 
         # Backward compat aliases — remove at 1.0
         self.wlans = self.wifi_networks
