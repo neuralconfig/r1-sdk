@@ -6,7 +6,7 @@ Cross-session tracking for SDK features needed by r1-scripts or other consumers.
 
 - [x] Module renames: `wlans` → `wifi_networks`, `vlans` → `vlan_pools`, `l3acl` → `l3_acl_policies`, `AccessPoints` → `APs` (0.3.0)
 - [x] `list_all()` auto-pagination for 8 modules (0.3.0)
-- [x] 846 unit tests, 99% coverage (0.3.0)
+- [x] 854 unit tests, 99% coverage (0.3.0)
 
 ## Requested Features
 
@@ -18,7 +18,6 @@ These R1 API tag groups have zero SDK coverage:
 
 - MSP Services (93 ops)
 - View Model Resources (89 ops)
-- Certificate Template (54 ops)
 - RUCKUS Edge (51 ops)
 - Guest Service (32 ops)
 - Adaptive Policy Management (32 ops)
