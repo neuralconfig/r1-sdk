@@ -489,7 +489,10 @@ class TestAddToVenue:
 
         args, kwargs = client.post.call_args
         assert args[0] == f"/venues/{VENUE_ID}/switches"
-        data = kwargs["data"]
+        # API expects an array of switch objects
+        payload = kwargs["data"]
+        assert isinstance(payload, list)
+        data = payload[0]
         assert data["id"] == "SN123"
         assert data["name"] == "Edge SW"
         assert data["venueId"] == VENUE_ID
@@ -501,7 +504,7 @@ class TestAddToVenue:
 
         switches.add_to_venue(VENUE_ID, "SN1", "SW1")
 
-        data = client.post.call_args[1]["data"]
+        data = client.post.call_args[1]["data"][0]
         assert data["enableStack"] is False
         assert data["jumboMode"] is False
         assert data["igmpSnooping"] == "none"
@@ -514,7 +517,7 @@ class TestAddToVenue:
 
         switches.add_to_venue(VENUE_ID, "SN1", "SW1")
 
-        data = client.post.call_args[1]["data"]
+        data = client.post.call_args[1]["data"][0]
         assert "description" not in data
         assert "trustPorts" not in data
         assert "stackMembers" not in data
@@ -536,7 +539,7 @@ class TestAddToVenue:
             initial_vlan_id=10,
         )
 
-        data = client.post.call_args[1]["data"]
+        data = client.post.call_args[1]["data"][0]
         assert data["description"] == "Main switch"
         assert data["trustPorts"] == ["port1"]
         assert data["stackMembers"] == [{"id": "m1"}]
@@ -549,7 +552,7 @@ class TestAddToVenue:
 
         switches.add_to_venue(VENUE_ID, "SN1", "SW1", customField="value")
 
-        data = client.post.call_args[1]["data"]
+        data = client.post.call_args[1]["data"][0]
         assert data["customField"] == "value"
 
     def test_simple_endpoint(self, switches, client):
@@ -565,7 +568,7 @@ class TestAddToVenue:
 
         args, kwargs = client.post.call_args
         assert args[0] == "/switches"
-        data = kwargs["data"]
+        data = kwargs["data"][0]
         assert data["id"] == "SN1"
         assert data["name"] == "SW1"
         assert data["venueId"] == VENUE_ID
@@ -585,7 +588,7 @@ class TestAddToVenue:
             use_simple_endpoint=True,
         )
 
-        data = client.post.call_args[1]["data"]
+        data = client.post.call_args[1]["data"][0]
         assert data["stackMembers"] == [{"id": "m1"}]
         assert data["trustPorts"] == ["p1", "p2"]
 
@@ -595,7 +598,7 @@ class TestAddToVenue:
 
         switches.add_to_venue(VENUE_ID, "SN1", "SW1", use_simple_endpoint=True)
 
-        data = client.post.call_args[1]["data"]
+        data = client.post.call_args[1]["data"][0]
         assert "enableStack" not in data
         assert "jumboMode" not in data
         assert "igmpSnooping" not in data

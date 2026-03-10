@@ -374,6 +374,21 @@ class WiFiNetworks:
                 message=f"WLAN with ID {wlan_id} not deployed in venue {venue_id}"
             )
 
+    def get_radius_proxy_settings(self, wlan_id: str) -> Dict[str, Any]:
+        """
+        Get RADIUS server profile settings for a WiFi network.
+
+        Returns proxy mode flags (enableAuthProxy, enableAccountingProxy)
+        and related RADIUS configuration.
+
+        Args:
+            wlan_id: ID of the WiFi network
+
+        Returns:
+            Dict containing the RADIUS proxy settings
+        """
+        return self.client.get(f"/wifiNetworks/{wlan_id}/radiusServerProfileSettings")
+
     def associate_dpsk_service(self, wlan_id: str, dpsk_service_id: str) -> Dict[str, Any]:
         """
         Associate a DPSK service with a WiFi network.

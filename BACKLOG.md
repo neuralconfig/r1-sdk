@@ -1,6 +1,6 @@
 # R1 SDK Backlog
 
-Cross-session tracking for SDK features needed by r1-tools or other consumers.
+Cross-session tracking for SDK features needed by r1-scripts or other consumers.
 
 ## Completed
 

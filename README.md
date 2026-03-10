@@ -2,7 +2,7 @@
 
 A Python SDK for the RUCKUS One (R1) network management platform API.
 
-> **Alpha** — This SDK covers ~8% of the R1 API (1,491 operations across 203 tag groups). Core modules for venues, APs, switches, WiFi networks, VLAN pools, DPSK, identities, L3 ACL policies, CLI templates, and switch profiles are implemented. See [API Coverage](#api-coverage) for details.
+> **Alpha** — This SDK covers ~8% of the R1 API (1,491 operations across 203 tag groups). Core modules for venues, APs, switches, WiFi networks, VLAN pools, DPSK, identities, L3 ACL policies, CLI templates, switch profiles, RADIUS server profiles, and certificate templates are implemented. See [API Coverage](#api-coverage) for details.
 
 ## Installation
 
@@ -65,9 +65,9 @@ client = R1Client.from_env()
 | Module | Access via | Key Methods |
 |--------|-----------|-------------|
 | Venues | `client.venues` | `list()`, `list_all()`, `get()`, `create()`, `update()`, `delete()`, `get_aps()`, `get_switches()`, `get_wlans()`, `get_clients()` |
-| APs | `client.aps` | `list()`, `list_all()`, `get()`, `update()`, `reboot()`, `add_to_venue()`, `add_to_group()`, `get_clients()`, `get_radio_settings()`, `update_radio_settings()`, `get_statistics()` |
-| Switches | `client.switches` | `list()`, `list_all()`, `get()`, `update()`, `reboot()`, `add_to_venue()`, `get_ports()`, `configure_port()`, `get_vlans()`, `create_vlan()`, `delete_vlan()`, `get_statistics()` |
-| WiFi Networks | `client.wifi_networks` | `list()`, `list_all()`, `get()`, `create()`, `update()`, `delete()`, `deploy_to_venue()`, `undeploy_from_venue()`, `get_venue_wlan_settings()`, `update_venue_wlan_settings()` |
+| APs | `client.aps` | `list()`, `list_all()`, `get()`, `update()`, `reboot()`, `add_to_venue()`, `remove_from_venue()`, `add_to_group()`, `get_clients()`, `get_radio_settings()`, `update_radio_settings()`, `get_statistics()`, `get_support_logs()` |
+| Switches | `client.switches` | `list()`, `list_all()`, `get()`, `update()`, `reboot()`, `add_to_venue()`, `remove_from_venue()`, `get_ports()`, `configure_port()`, `get_vlans()`, `create_vlan()`, `delete_vlan()`, `get_statistics()` |
+| WiFi Networks | `client.wifi_networks` | `list()`, `list_all()`, `get()`, `create()`, `update()`, `delete()`, `deploy_to_venue()`, `undeploy_from_venue()`, `get_venue_wlan_settings()`, `update_venue_wlan_settings()`, `get_radius_proxy_settings()` |
 | VLAN Pools | `client.vlan_pools` | `list_pools()`, `get_vlan_pool()`, `create_vlan_pool()`, `update_vlan_pool()`, `delete_vlan_pool()`, `list_profiles()`, `create_vlan_pool_profile()` |
 | DPSK | `client.dpsk` | `list_services()`, `get_service()`, `create_service()`, `list_passphrases()`, `create_passphrases()`, `import_passphrases_csv()`, `export_passphrases_csv()` |
 | Identities | `client.identities` | `list()`, `list_all()`, `query()`, `get()`, `create()`, `update()`, `delete()`, `import_csv()`, `export_csv()` |
@@ -75,10 +75,12 @@ client = R1Client.from_env()
 | L3 ACL Policies | `client.l3_acl_policies` | `list()`, `get()`, `create()`, `update()`, `delete()`, `create_rule()` |
 | CLI Templates | `client.cli_templates` | `list()`, `list_all()`, `get()`, `create()`, `update()`, `delete()`, `associate_with_venue()`, `disassociate_from_venue()` |
 | Switch Profiles | `client.switch_profiles` | `list()`, `list_all()`, `get()`, `create()`, `update()`, `delete()`, `associate_with_venue()`, `disassociate_from_venue()` |
+| RADIUS Server Profiles | `client.radius_server_profiles` | `list()`, `query()`, `get()`, `get_for_wifi_network()` |
+| Certificate Templates | `client.certificate_templates` | `query()`, `get()`, `get_for_wifi_network()` |
 
 ## API Coverage
 
-The R1 API has **1,491 operations** across **203 tag groups**. The SDK covers **112 operations (~8%)** with full or partial coverage of 29 tag groups:
+The R1 API has **1,491 operations** across **203 tag groups**. The SDK covers **123 operations (~8%)** with full or partial coverage of 31 tag groups:
 
 | Tag Group | Spec Ops | SDK Ops | Coverage |
 |-----------|----------|---------|----------|
@@ -92,10 +94,12 @@ The R1 API has **1,491 operations** across **203 tag groups**. The SDK covers **
 | L3 ACL Policies | 10 | 4 | 40% |
 | DPSK Services | 11 | 5 | 45% |
 | Switch VLANs | 19 | 4 | 21% |
-| Switches | 20 | 4 | 20% |
-| WiFi Networks | 24 | 4 | 17% |
-| APs | 106 | 7 | 7% |
-| 174 other groups | 1,077 | 0 | 0% |
+| Switches | 20 | 5 | 25% |
+| WiFi Networks | 24 | 5 | 21% |
+| RADIUS Profile | 12 | 4 | 33% |
+| Certificate Template | 21 | 3 | 14% |
+| APs | 106 | 9 | 8% |
+| 172 other groups | 1,044 | 0 | 0% |
 
 ## Error Handling
 

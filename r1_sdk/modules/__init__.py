@@ -16,6 +16,8 @@ from .identities import Identities
 from .l3_acl_policies import L3AclPolicies
 from .cli_templates import CLITemplates
 from .switch_profiles import SwitchProfiles
+from .radius_server_profiles import RadiusServerProfiles
+from .certificate_templates import CertificateTemplates
 
 # Backward compat aliases — remove at 1.0
 AccessPoints = APs
@@ -35,6 +37,8 @@ __all__ = [
     'L3AclPolicies',
     'CLITemplates',
     'SwitchProfiles',
+    'RadiusServerProfiles',
+    'CertificateTemplates',
     # Backward compat aliases
     'AccessPoints',
     'WLANs',
