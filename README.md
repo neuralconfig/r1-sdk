@@ -2,7 +2,7 @@
 
 A Python SDK for the RUCKUS One (R1) network management platform API.
 
-> **Alpha** — This SDK covers ~12% of the R1 API (183 spec operations across 1,491 in 203 tag groups). 18 modules cover venues, APs, switches, WiFi networks, VLAN pools, DPSK, identities, identity groups, L3 ACL policies, CLI templates, switch profiles, RADIUS server profiles, certificate templates, MAC registration pools, policy sets, RADIUS attribute groups, external identities, and policy templates. 6 modules now have 100% spec coverage. See [API Coverage](#api-coverage) for details.
+> **Alpha** — This SDK covers ~11% of the R1 API (161 spec operations across 1,491 in 203 tag groups). 18 modules cover venues, APs, switches, WiFi networks, VLAN pools, DPSK, identities, identity groups, L3 ACL policies, CLI templates, switch profiles, RADIUS server profiles, certificate templates, MAC registration pools, policy sets, RADIUS attribute groups, external identities, and policy templates. 7 modules now have 100% spec coverage. See [API Coverage](#api-coverage) for details.
 
 ## Installation
 
@@ -90,7 +90,7 @@ client = R1Client.from_env()
 
 ## API Coverage
 
-The R1 API has **1,491 operations** across **203 tag groups**. The SDK covers **183 spec operations (~12%)** with full or partial coverage of 20 tag groups. 6 modules now have 100% spec coverage:
+The R1 API has **1,491 operations** across **203 tag groups**. The SDK covers **161 spec operations (~11%)** with full or partial coverage of 20 tag groups. 7 modules now have 100% spec coverage:
 
 | Tag Group | Spec Ops | SDK Ops | Coverage | SDK Module |
 |-----------|----------|---------|----------|------------|
@@ -100,21 +100,21 @@ The R1 API has **1,491 operations** across **203 tag groups**. The SDK covers **
 | Identity Groups | 11 | 11 | 100% | `IdentityGroups` |
 | MAC Registration | 19 | 19 | 100% | `MacRegistrationPools` |
 | Identities | 15 | 15 | 100% | `Identities` |
-| Adaptive Policy Mgmt | 15 | 9 | 60% | `PolicySets`, `PolicyTemplates` |
+| External Identity | 1 | 1 | 100% | `ExternalIdentities` |
+| Adaptive Policy Mgmt | 13 | 9 | 69% | `PolicySets` |
 | Venues | 7 | 4 | 57% | `Venues` |
-| VLAN Pools | 17 | 9 | 53% | `VLANPools` |
+| Policy Templates | 14 | 8 | 57% | `PolicyTemplates` |
+| VLAN Pools | 18 | 10 | 56% | `VLANPools` |
 | Radius Attribute Group | 14 | 7 | 50% | `RadiusAttributeGroups` |
-| WiFi Networks | 24 | 11 | 46% | `WiFiNetworks` |
 | DPSK Services | 11 | 5 | 45% | `DPSK` |
-| Policy Templates | 19 | 8 | 42% | `PolicyTemplates` |
+| WiFi Networks | 25 | 10 | 40% | `WiFiNetworks` |
 | L3 ACL Policies | 10 | 4 | 40% | `L3AclPolicies` |
 | RADIUS Profile | 12 | 3 | 25% | `RadiusServerProfiles` |
 | Switch VLANs | 19 | 4 | 21% | `Switches` |
-| Switches | 20 | 4 | 20% | `Switches` |
-| External Auth Service | 10 | 1 | 10% | `ExternalIdentities` |
+| Switches | 30 | 6 | 20% | `Switches` |
 | Certificate Template | 21 | 2 | 10% | `CertificateTemplates` |
 | APs | 106 | 9 | 8% | `APs` |
-| 183 other groups | 1,107 | 0 | 0% | — |
+| Remaining groups | 1,111 | 0 | 0% | — |
 
 > **Note:** Some query endpoints (e.g. `POST /l3AclPolicies/query`) are tagged under "View" tags in the spec rather than their resource tag. These are counted in the SDK coverage where implemented. See [docs/non-spec-endpoints.md](docs/non-spec-endpoints.md) for SDK methods calling endpoints not in the current spec.
 
