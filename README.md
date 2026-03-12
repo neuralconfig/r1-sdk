@@ -2,7 +2,7 @@
 
 A Python SDK for the RUCKUS One (R1) network management platform API.
 
-> **Alpha** — This SDK covers ~9% of the R1 API (138 endpoints across 1,491 operations in 203 tag groups). Core modules for venues, APs, switches, WiFi networks, VLAN pools, DPSK, identities, L3 ACL policies, CLI templates, switch profiles, RADIUS server profiles, and certificate templates are implemented. See [API Coverage](#api-coverage) for details.
+> **Alpha** — This SDK covers ~12% of the R1 API (181 operations across 1,491 in 203 tag groups). 18 modules cover venues, APs, switches, WiFi networks, VLAN pools, DPSK, identities, identity groups, L3 ACL policies, CLI templates, switch profiles, RADIUS server profiles, certificate templates, MAC registration pools, policy sets, RADIUS attribute groups, external identities, and policy templates. See [API Coverage](#api-coverage) for details.
 
 ## Installation
 
@@ -82,29 +82,39 @@ client = R1Client.from_env()
 | [Switch Profiles](docs/modules/switch_profiles.md) | `client.switch_profiles` | `list()`, `list_all()`, `query()`, `get()`, `create()`, `update()`, `delete()`, `bulk_delete()`, `associate_with_venue()`, `disassociate_from_venue()`, `get_venue_profiles()`, ACL CRUD, VLAN CRUD, trusted port CRUD, CLI variable methods, switch mapping methods |
 | [RADIUS Server Profiles](docs/modules/radius_server_profiles.md) | `client.radius_server_profiles` | `list()`, `query()`, `get()`, `get_for_wifi_network()` |
 | [Certificate Templates](docs/modules/certificate_templates.md) | `client.certificate_templates` | `query()`, `get()`, `get_for_wifi_network()` |
+| [MAC Registration Pools](docs/modules/mac_registration_pools.md) | `client.mac_registration_pools` | `query()`, `list_all()`, `get()`, `create()`, `update()`, `delete()`, `query_registrations()`, `list_all_registrations()`, `create_registration()`, `update_registration()`, `delete_registration()`, `delete_registrations()`, `import_csv()`, `associate_policy_set()`, `remove_policy_set()` |
+| [Policy Sets](docs/modules/policy_sets.md) | `client.policy_sets` | `query()`, `list_all()`, `get()`, `create()`, `update()`, `delete()`, `list_policies()`, `add_policy()`, `remove_policy()`, `get_assignments()` |
+| [RADIUS Attribute Groups](docs/modules/radius_attribute_groups.md) | `client.radius_attribute_groups` | `query()`, `list_all()`, `get()`, `create()`, `update()`, `delete()`, `list_attributes()`, `list_vendors()` |
+| [External Identities](docs/modules/external_identities.md) | `client.external_identities` | `query()`, `list_all()` |
+| [Policy Templates](docs/modules/policy_templates.md) | `client.policy_templates` | `query_templates()`, `list_all_templates()`, `get_template()`, `list_template_attributes()`, `query_policies()`, `list_all_policies()`, `get_policy()`, `create_policy()`, `update_policy()`, `delete_policy()` |
 
 ## API Coverage
 
-The R1 API has **1,491 operations** across **203 tag groups**. The SDK covers **138 operations (~9%)** with full or partial coverage of 31 tag groups:
+The R1 API has **1,491 operations** across **203 tag groups**. The SDK covers **181 operations (~12%)** with full or partial coverage of 36 tag groups:
 
-| Tag Group | Spec Ops | SDK Ops | Coverage |
-|-----------|----------|---------|----------|
-| CLI Templates | 10 | 10 | 100% |
-| Switch Profiles | 10 | 10 | 100% |
-| DPSK Passphrases | 14 | 12 | 86% |
-| Identity Groups | 11 | 9 | 82% |
-| Identities | 15 | 11 | 73% |
-| Venues | 7 | 5 | 71% |
-| VLAN Pools | 17 | 10 | 59% |
-| DPSK Services | 11 | 5 | 45% |
-| L3 ACL Policies | 10 | 5 | 50% |
-| Switch VLANs | 19 | 5 | 26% |
-| Switches | 20 | 6 | 30% |
-| WiFi Networks | 24 | 12 | 50% |
-| RADIUS Profile | 12 | 4 | 33% |
-| Certificate Template | 21 | 3 | 14% |
-| APs | 106 | 15 | 14% |
-| 188 other groups | 1,184 | 0 | 0% |
+| Tag Group | Spec Ops | SDK Ops | Coverage | SDK Module |
+|-----------|----------|---------|----------|------------|
+| CLI Templates | 10 | 10 | 100% | `CLITemplates` |
+| Switch Profiles | 10 | 10 | 100% | `SwitchProfiles` |
+| DPSK Passphrases | 14 | 12 | 86% | `DPSK` |
+| Identity Groups | 11 | 9 | 82% | `IdentityGroups` |
+| MAC Registration | 18 | 15 | 83% | `MacRegistrationPools` |
+| Identities | 15 | 11 | 73% | `Identities` |
+| Venues | 7 | 5 | 71% | `Venues` |
+| VLAN Pools | 17 | 10 | 59% | `VLANPools` |
+| Radius Attribute Group | 14 | 8 | 57% | `RadiusAttributeGroups` |
+| Policy Templates | 19 | 10 | 53% | `PolicyTemplates` |
+| L3 ACL Policies | 10 | 5 | 50% | `L3AclPolicies` |
+| WiFi Networks | 24 | 12 | 50% | `WiFiNetworks` |
+| DPSK Services | 11 | 5 | 45% | `DPSK` |
+| RADIUS Profile | 12 | 4 | 33% | `RadiusServerProfiles` |
+| Adaptive Policy Management | 32 | 10 | 31% | `PolicySets`, `PolicyTemplates` |
+| Switches | 20 | 6 | 30% | `Switches` |
+| Switch VLANs | 19 | 5 | 26% | `Switches` |
+| External Auth Service | 9 | 2 | 22% | `ExternalIdentities` |
+| Certificate Template | 21 | 3 | 14% | `CertificateTemplates` |
+| APs | 106 | 15 | 14% | `APs` |
+| 183 other groups | 1,099 | 0 | 0% | — |
 
 ## Error Handling
 

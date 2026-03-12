@@ -364,13 +364,12 @@ class Identities:
             ValidationError: If the CSV format is invalid
         """
         files = {'file': ('identities.csv', csv_file, 'text/csv')}
-        
+
         try:
-            # Note: This endpoint might require multipart/form-data
-            return self.client.post(
+            return self.client.request(
+                'POST',
                 f"/identityGroups/{group_id}/identities/csvFile",
-                files=files,
-                headers={'Content-Type': 'multipart/form-data'}
+                files=files
             )
         except ResourceNotFoundError:
             raise ResourceNotFoundError(message=f"Identity group with ID {group_id} not found")

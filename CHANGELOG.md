@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.5.1] - 2026-03-12
+
+### Added
+- PolicyTemplates module — `query_templates()`, `list_all_templates()`, `get_template()`, `list_template_attributes()`, `query_policies()`, `list_all_policies()`, `get_policy()`, `create_policy()`, `update_policy()`, `delete_policy()` (10 methods)
+- MacRegistrationPools: `list_all_registrations()` for fetching all registrations via GET with pagination
+
+### Fixed
+- MacRegistrationPools: `list_all()` switched from broken `POST /query` to `GET /macRegistrationPools` with pagination
+- MacRegistrationPools: `query()` and `query_registrations()` fixed to use SearchDto body + query param pagination
+- PolicySets: `add_policy()` sends `{}` instead of no body when called without kwargs (fixes 400 error)
+
+## [0.5.0] - 2026-03-12
+
+### Added
+- **MacRegistrationPools:** New module — `query()`, `list_all()`, `get()`, `create()`, `update()`, `delete()`, `query_registrations()`, `create_registration()`, `update_registration()`, `delete_registration()`, `delete_registrations()`, `import_csv()`, `associate_policy_set()`, `remove_policy_set()`
+- **PolicySets:** New module — `query()`, `list_all()`, `get()`, `create()`, `update()`, `delete()`, `list_policies()`, `add_policy()`, `remove_policy()`, `get_assignments()`
+- **RadiusAttributeGroups:** New module — `query()`, `list_all()`, `get()`, `create()`, `update()`, `delete()`, `list_attributes()`, `list_vendors()`
+- **ExternalIdentities:** New read-only module — `query()`, `list_all()`
+- **Venues:** `query_unit_identities()`, `associate_unit_identity()`, `remove_unit_identity()` for property/unit identity management
+- **client.request():** `files` parameter for multipart file uploads
+- **Deprecation detection:** Automatic `warnings.warn()` when API responses contain `Deprecation`, `Sunset`, or `X-Deprecated` headers
+
+### Fixed
+- `identities.import_csv()` no longer sends manual `Content-Type: multipart/form-data` header — lets `requests` set the multipart boundary correctly
+
 ## [0.4.3] - 2026-03-12
 
 ### Fixed

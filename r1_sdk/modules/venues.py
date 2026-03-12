@@ -255,3 +255,66 @@ class Venues:
             return self.client.post(f"/venues/{venue_id}/clients/query", data=data)
         except ResourceNotFoundError:
             raise ResourceNotFoundError(message=f"Venue with ID {venue_id} not found")
+
+    # ── Unit Identity Management ───────────────────────────────
+
+    def query_unit_identities(self, venue_id: str, filters: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Query unit identities for a venue (property/unit identity management).
+
+        Args:
+            venue_id: ID of the venue
+            filters: Query parameters (page, pageSize, filters, etc.)
+
+        Returns:
+            Dict containing paginated unit identity results
+
+        Raises:
+            ResourceNotFoundError: If the venue does not exist
+        """
+        data = dict(filters) if filters else {}
+        try:
+            return self.client.post(f"/venues/{venue_id}/units/identities/query", data=data)
+        except ResourceNotFoundError:
+            raise ResourceNotFoundError(message=f"Venue with ID {venue_id} not found")
+
+    def associate_unit_identity(self, venue_id: str, unit_id: str, identity_id: str) -> Dict[str, Any]:
+        """
+        Associate an identity with a unit in a venue.
+
+        Args:
+            venue_id: ID of the venue
+            unit_id: ID of the unit
+            identity_id: ID of the identity to associate
+
+        Returns:
+            Dict containing operation result
+
+        Raises:
+            ResourceNotFoundError: If the venue, unit, or identity does not exist
+        """
+        try:
+            return self.client.put(f"/venues/{venue_id}/units/{unit_id}/identities/{identity_id}")
+        except ResourceNotFoundError:
+            raise ResourceNotFoundError(
+                message=f"Venue {venue_id}, unit {unit_id}, or identity {identity_id} not found"
+            )
+
+    def remove_unit_identity(self, venue_id: str, unit_id: str, identity_id: str) -> None:
+        """
+        Remove an identity from a unit in a venue.
+
+        Args:
+            venue_id: ID of the venue
+            unit_id: ID of the unit
+            identity_id: ID of the identity to remove
+
+        Raises:
+            ResourceNotFoundError: If the venue, unit, or identity does not exist
+        """
+        try:
+            self.client.delete(f"/venues/{venue_id}/units/{unit_id}/identities/{identity_id}")
+        except ResourceNotFoundError:
+            raise ResourceNotFoundError(
+                message=f"Venue {venue_id}, unit {unit_id}, or identity {identity_id} not found"
+            )
