@@ -7,6 +7,7 @@ This module provides the main API client for interacting with the R1 API.
 import configparser
 import logging
 import os
+import warnings
 import requests
 from typing import Any, Dict, Optional
 from urllib.parse import urljoin
@@ -95,6 +96,7 @@ class R1Client:
         data: Optional[Dict[str, Any]] = None,
         json_data: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
+        files: Optional[Dict] = None,
         raw_response: bool = False
     ) -> Any:
         """
@@ -107,6 +109,7 @@ class R1Client:
             data: Form data
             json_data: JSON data
             headers: Custom headers
+            files: Multipart file uploads (passed to requests.request)
             raw_response: If True, return the raw response object
 
         Returns:
@@ -127,6 +130,11 @@ class R1Client:
         if headers:
             request_headers.update(headers)
 
+        # When uploading files, remove Content-Type so requests can set the
+        # multipart boundary automatically
+        if files:
+            request_headers.pop('Content-Type', None)
+
         # Log request body for debugging
         if json_data:
             logger.debug(f"Request JSON data: {json_data}")
@@ -140,7 +148,8 @@ class R1Client:
                 params=params,
                 data=data,
                 json=json_data,
-                headers=request_headers
+                headers=request_headers,
+                files=files
             )
 
             logger.debug(f"Response status: {response.status_code}")
@@ -152,15 +161,21 @@ class R1Client:
                 request_headers = self.auth.get_auth_headers()
                 if headers:
                     request_headers.update(headers)
+                if files:
+                    request_headers.pop('Content-Type', None)
                 response = requests.request(
                     method=method.upper(),
                     url=url,
                     params=params,
                     data=data,
                     json=json_data,
-                    headers=request_headers
+                    headers=request_headers,
+                    files=files
                 )
                 logger.debug(f"Retry response status: {response.status_code}")
+
+            # Check for API deprecation headers
+            self._check_deprecation_headers(response, path)
 
             # Handle response status
             if 200 <= response.status_code < 300:
@@ -179,6 +194,17 @@ class R1Client:
         except requests.RequestException as e:
             logger.exception(f"Request failed: {str(e)}")
             raise APIError(message=f"Request failed: {str(e)}")
+
+    def _check_deprecation_headers(self, response: requests.Response, path: str) -> None:
+        """Check for API deprecation headers and emit warnings."""
+        for header in ('Deprecation', 'Sunset', 'X-Deprecated'):
+            value = response.headers.get(header)
+            if value:
+                warnings.warn(
+                    f"API deprecation detected on {path}: {header}: {value}",
+                    DeprecationWarning,
+                    stacklevel=4
+                )
 
     def _handle_error_response(self, response: requests.Response) -> None:
         """
@@ -252,12 +278,15 @@ class R1Client:
         page = 0
         base_query = dict(query_data or {})
         while True:
-            q = {**base_query, "pageSize": page_size, "page": page, "sortOrder": "ASC"}
+            q = {**base_query, "pageSize": page_size, "page": page}
             result = self.post(path, data=q)
             # Handle both response formats
             items = result.get("data") or result.get("content") or []
             all_data.extend(items)
-            total = result.get("totalCount") or result.get("totalElements") or result.get("total") or 0
+            # totalCount may be top-level or nested under "paging"
+            paging = result.get("paging") or {}
+            total = (result.get("totalCount") or result.get("totalElements")
+                     or result.get("total") or paging.get("totalCount") or 0)
             if len(all_data) >= total or not items:
                 break
             page += 1
@@ -278,6 +307,11 @@ class R1Client:
         from .modules.switch_profiles import SwitchProfiles
         from .modules.radius_server_profiles import RadiusServerProfiles
         from .modules.certificate_templates import CertificateTemplates
+        from .modules.mac_registration_pools import MacRegistrationPools
+        from .modules.policy_sets import PolicySets
+        from .modules.radius_attribute_groups import RadiusAttributeGroups
+        from .modules.external_identities import ExternalIdentities
+        from .modules.policy_templates import PolicyTemplates
 
         self.venues = Venues(self)
         self.aps = APs(self)
@@ -292,6 +326,11 @@ class R1Client:
         self.switch_profiles = SwitchProfiles(self)
         self.radius_server_profiles = RadiusServerProfiles(self)
         self.certificate_templates = CertificateTemplates(self)
+        self.mac_registration_pools = MacRegistrationPools(self)
+        self.policy_sets = PolicySets(self)
+        self.radius_attribute_groups = RadiusAttributeGroups(self)
+        self.external_identities = ExternalIdentities(self)
+        self.policy_templates = PolicyTemplates(self)
 
         # Backward compat aliases — remove at 1.0
         self.wlans = self.wifi_networks
