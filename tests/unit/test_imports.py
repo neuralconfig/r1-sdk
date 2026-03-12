@@ -4,7 +4,7 @@ import r1_sdk
 
 
 def test_version():
-    assert r1_sdk.__version__ == "0.4.2"
+    assert r1_sdk.__version__ == "0.5.2"
 
 
 def test_client_exports():

@@ -78,6 +78,19 @@ passphrases = client.dpsk.list_passphrases("pool-uuid", {"pageSize": 50})
 
 ---
 
+### list_all_passphrases(pool_id, page_size=100, **kwargs)
+
+Fetch all passphrases in a DPSK pool using auto-pagination.
+
+```python
+all_passphrases = client.dpsk.list_all_passphrases("pool-uuid")
+all_passphrases = client.dpsk.list_all_passphrases("pool-uuid", page_size=200)
+```
+
+**Returns:** `list[dict]`
+
+---
+
 ### get_passphrase(pool_id, passphrase_id)
 
 Get a specific passphrase.
@@ -117,6 +130,18 @@ client.dpsk.update_passphrase("pool-uuid", "passphrase-uuid", {"userName": "upda
 
 ---
 
+### patch_passphrase(pool_id, passphrase_id, updates)
+
+Partially update a passphrase (PATCH).
+
+```python
+client.dpsk.patch_passphrase("pool-uuid", "passphrase-uuid", {"maxDevices": 5})
+```
+
+**Returns:** `dict`
+
+---
+
 ### delete_passphrases(pool_id, passphrase_ids)
 
 Delete passphrases from a pool.
@@ -143,6 +168,19 @@ client.dpsk.batch_update_passphrases("pool-uuid", [
 ---
 
 ## Device Methods
+
+### query_devices(pool_id, passphrase_id, filters=None)
+
+Query devices associated with a passphrase with optional filtering.
+
+```python
+devices = client.dpsk.query_devices("pool-uuid", "passphrase-uuid")
+devices = client.dpsk.query_devices("pool-uuid", "passphrase-uuid", filters={"status": "ONLINE"})
+```
+
+**Returns:** `dict`
+
+---
 
 ### list_devices(pool_id, passphrase_id)
 

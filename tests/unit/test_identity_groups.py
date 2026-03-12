@@ -378,3 +378,104 @@ class TestListAll:
         identity_groups.list_all(dpskPoolId="pool-1")
         call_data = identity_groups.client.paginate_query.call_args[0][1]
         assert call_data["dpskPoolId"] == "pool-1"
+
+
+# ---------------------------------------------------------------------------
+# remove_policy_set()
+# ---------------------------------------------------------------------------
+
+class TestRemovePolicySet:
+    def test_deletes_correct_url(self, identity_groups):
+        identity_groups.delete = MagicMock()
+        identity_groups.remove_policy_set("g1", "ps-1")
+        identity_groups.client.delete.assert_called_once_with(
+            "/identityGroups/g1/policySets/ps-1"
+        )
+
+    def test_returns_none(self, identity_groups):
+        identity_groups.client.delete.return_value = None
+        result = identity_groups.remove_policy_set("g1", "ps-1")
+        assert result is None
+
+    def test_raises_resource_not_found_on_404(self, identity_groups):
+        identity_groups.client.delete.side_effect = ResourceNotFoundError()
+        with pytest.raises(ResourceNotFoundError) as exc_info:
+            identity_groups.remove_policy_set("bad-g", "ps-1")
+        assert "bad-g" in str(exc_info.value)
+
+
+# ---------------------------------------------------------------------------
+# associate_mac_pool()
+# ---------------------------------------------------------------------------
+
+class TestAssociateMacPool:
+    def test_puts_correct_url(self, identity_groups):
+        identity_groups.client.put.return_value = {}
+        identity_groups.associate_mac_pool("g1", "pool-1")
+        identity_groups.client.put.assert_called_once_with(
+            "/identityGroups/g1/macRegistrationPools/pool-1"
+        )
+
+    def test_no_data_payload(self, identity_groups):
+        identity_groups.client.put.return_value = {}
+        identity_groups.associate_mac_pool("g1", "pool-1")
+        args, kwargs = identity_groups.client.put.call_args
+        assert "data" not in kwargs
+
+    def test_returns_api_response(self, identity_groups):
+        expected = {"status": "ok"}
+        identity_groups.client.put.return_value = expected
+        assert identity_groups.associate_mac_pool("g1", "pool-1") == expected
+
+    def test_raises_resource_not_found_on_404(self, identity_groups):
+        identity_groups.client.put.side_effect = ResourceNotFoundError()
+        with pytest.raises(ResourceNotFoundError) as exc_info:
+            identity_groups.associate_mac_pool("bad-g", "pool-1")
+        assert "bad-g" in str(exc_info.value)
+
+
+# ---------------------------------------------------------------------------
+# export_csv()
+# ---------------------------------------------------------------------------
+
+class TestExportCsv:
+    def test_export_csv_minimal(self, identity_groups):
+        mock_response = MagicMock()
+        mock_response.content = b"name,description\nStaff,Employees\n"
+        identity_groups.client.post.return_value = mock_response
+        result = identity_groups.export_csv()
+        identity_groups.client.post.assert_called_once_with(
+            "/identityGroups/csvFile", data={}, raw_response=True
+        )
+        assert result == b"name,description\nStaff,Employees\n"
+
+    def test_export_csv_with_filters(self, identity_groups):
+        mock_response = MagicMock()
+        mock_response.content = b"csv"
+        identity_groups.client.post.return_value = mock_response
+        identity_groups.export_csv(filters={"dpskPoolId": "pool-1"})
+        call_kwargs = identity_groups.client.post.call_args[1]
+        assert call_kwargs["data"]["dpskPoolId"] == "pool-1"
+
+    def test_export_csv_extra_kwargs(self, identity_groups):
+        mock_response = MagicMock()
+        mock_response.content = b"csv"
+        identity_groups.client.post.return_value = mock_response
+        identity_groups.export_csv(extra="yes")
+        call_kwargs = identity_groups.client.post.call_args[1]
+        assert call_kwargs["data"]["extra"] == "yes"
+
+    def test_export_csv_returns_bytes(self, identity_groups):
+        mock_response = MagicMock()
+        mock_response.content = b"\xef\xbb\xbfname\n"
+        identity_groups.client.post.return_value = mock_response
+        result = identity_groups.export_csv()
+        assert isinstance(result, bytes)
+
+    def test_export_csv_uses_raw_response_flag(self, identity_groups):
+        mock_response = MagicMock()
+        mock_response.content = b"data"
+        identity_groups.client.post.return_value = mock_response
+        identity_groups.export_csv()
+        call_kwargs = identity_groups.client.post.call_args[1]
+        assert call_kwargs["raw_response"] is True

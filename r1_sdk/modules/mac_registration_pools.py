@@ -118,6 +118,28 @@ class MacRegistrationPools:
             data=data
         )
 
+    def create_standalone(self, name: str, **kwargs) -> Dict[str, Any]:
+        """
+        Create a standalone MAC registration pool (not under an identity group).
+
+        Note: This endpoint uses v1.1 headers. The standalone creation endpoint
+        is scheduled for migration to v1.1 by 2026-08-31.
+
+        Args:
+            name: Pool name
+            **kwargs: Additional pool properties
+
+        Returns:
+            Async response with requestId
+        """
+        data = {"name": name, **kwargs}
+        logger.debug(f"Creating standalone MAC registration pool '{name}'")
+        return self.client.post(
+            "/macRegistrationPools",
+            data=data,
+            headers=_V11_ACCEPT
+        )
+
     def update(self, pool_id: str, **kwargs) -> Dict[str, Any]:
         """
         Update a MAC registration pool (v1.1 async).
@@ -203,6 +225,20 @@ class MacRegistrationPools:
             else:
                 break
         return all_regs
+
+    def get_registration(self, pool_id: str, reg_id: str) -> Dict[str, Any]:
+        """
+        Get a single registration by ID.
+
+        Args:
+            pool_id: Pool ID
+            reg_id: Registration ID
+
+        Returns:
+            Registration details
+        """
+        logger.debug(f"Getting registration {reg_id} from pool {pool_id}")
+        return self.client.get(f"/macRegistrationPools/{pool_id}/registrations/{reg_id}")
 
     def create_registration(self, pool_id: str, mac_address: str, **kwargs) -> Dict[str, Any]:
         """

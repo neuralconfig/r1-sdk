@@ -216,14 +216,14 @@ class IdentityGroups:
     def associate_policy_set(self, group_id: str, policy_set_id: str) -> Dict[str, Any]:
         """
         Associate a policy set with an identity group.
-        
+
         Args:
             group_id: ID of the identity group
             policy_set_id: ID of the policy set to associate
-            
+
         Returns:
             Dict containing operation result
-            
+
         Raises:
             ResourceNotFoundError: If the identity group does not exist
         """
@@ -231,4 +231,58 @@ class IdentityGroups:
             return self.client.put(f"/identityGroups/{group_id}/policySets/{policy_set_id}")
         except ResourceNotFoundError:
             raise ResourceNotFoundError(message=f"Identity group with ID {group_id} not found")
-    
+
+    def remove_policy_set(self, group_id: str, policy_set_id: str) -> None:
+        """
+        Remove a policy set association from an identity group.
+
+        Args:
+            group_id: ID of the identity group
+            policy_set_id: ID of the policy set to remove
+
+        Raises:
+            ResourceNotFoundError: If the identity group does not exist
+        """
+        try:
+            self.client.delete(f"/identityGroups/{group_id}/policySets/{policy_set_id}")
+        except ResourceNotFoundError:
+            raise ResourceNotFoundError(message=f"Identity group with ID {group_id} not found")
+
+    def associate_mac_pool(self, group_id: str, pool_id: str) -> Dict[str, Any]:
+        """
+        Associate a MAC registration pool with an identity group.
+
+        Args:
+            group_id: ID of the identity group
+            pool_id: ID of the MAC registration pool to associate
+
+        Returns:
+            Dict containing operation result
+
+        Raises:
+            ResourceNotFoundError: If the identity group does not exist
+        """
+        try:
+            return self.client.put(f"/identityGroups/{group_id}/macRegistrationPools/{pool_id}")
+        except ResourceNotFoundError:
+            raise ResourceNotFoundError(message=f"Identity group with ID {group_id} not found")
+
+    def export_csv(self, filters: Optional[Dict[str, Any]] = None, **kwargs) -> bytes:
+        """
+        Export identity groups to CSV format.
+
+        Args:
+            filters: Optional filter parameters
+            **kwargs: Additional export parameters
+
+        Returns:
+            CSV file content as bytes
+        """
+        data = {}
+        if filters:
+            data.update(filters)
+        data.update(kwargs)
+
+        logger.debug(f"Exporting identity groups to CSV with parameters: {data}")
+        return self.client.post("/identityGroups/csvFile", data=data, raw_response=True).content
+

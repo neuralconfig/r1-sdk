@@ -187,3 +187,27 @@ client.wifi_networks.associate_dpsk_service("wlan-uuid", "dpsk-service-uuid")
 ```
 
 **Returns:** `dict`
+
+---
+
+### activate_mac_pool(wlan_id, pool_id)
+
+Activate a MAC registration pool on a WiFi network.
+
+```python
+client.wifi_networks.activate_mac_pool("wlan-uuid", "pool-uuid")
+```
+
+**Returns:** `dict`
+
+---
+
+### deactivate_mac_pool(wlan_id, pool_id)
+
+Deactivate a MAC registration pool on a WiFi network.
+
+```python
+client.wifi_networks.deactivate_mac_pool("wlan-uuid", "pool-uuid")
+```
+
+**Returns:** `dict`

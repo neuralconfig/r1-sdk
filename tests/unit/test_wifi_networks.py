@@ -613,3 +613,53 @@ class TestListAll:
         q = {"filters": [{"type": "VENUE", "value": "v1"}]}
         wifi.list_all(query_data=q)
         wifi.client.paginate_query.assert_called_once_with("/wifiNetworks/query", q)
+
+
+# ---------------------------------------------------------------------------
+# activate_mac_pool()
+# ---------------------------------------------------------------------------
+
+class TestActivateMacPool:
+    """Tests for WiFiNetworks.activate_mac_pool()."""
+
+    def test_puts_correct_path(self, wifi):
+        wifi.client.put.return_value = {"status": "ok"}
+        result = wifi.activate_mac_pool("w1", "pool-1")
+        wifi.client.put.assert_called_once_with(
+            "/wifiNetworks/w1/macRegistrationPools/pool-1", {}
+        )
+        assert result["status"] == "ok"
+
+    def test_returns_api_response(self, wifi):
+        expected = {"wlanId": "w1", "poolId": "pool-1"}
+        wifi.client.put.return_value = expected
+        assert wifi.activate_mac_pool("w1", "pool-1") == expected
+
+    def test_propagates_exception(self, wifi):
+        wifi.client.put.side_effect = RuntimeError("server down")
+        with pytest.raises(RuntimeError, match="server down"):
+            wifi.activate_mac_pool("w1", "pool-1")
+
+
+# ---------------------------------------------------------------------------
+# deactivate_mac_pool()
+# ---------------------------------------------------------------------------
+
+class TestDeactivateMacPool:
+    """Tests for WiFiNetworks.deactivate_mac_pool()."""
+
+    def test_deletes_correct_path(self, wifi):
+        wifi.deactivate_mac_pool("w1", "pool-1")
+        wifi.client.delete.assert_called_once_with(
+            "/wifiNetworks/w1/macRegistrationPools/pool-1"
+        )
+
+    def test_returns_none(self, wifi):
+        wifi.client.delete.return_value = None
+        result = wifi.deactivate_mac_pool("w1", "pool-1")
+        assert result is None
+
+    def test_propagates_exception(self, wifi):
+        wifi.client.delete.side_effect = RuntimeError("fail")
+        with pytest.raises(RuntimeError, match="fail"):
+            wifi.deactivate_mac_pool("w1", "pool-1")

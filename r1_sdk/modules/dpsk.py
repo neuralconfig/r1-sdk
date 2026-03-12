@@ -229,20 +229,73 @@ class DPSK:
         logger.debug(f"Updating passphrase {passphrase_id} in pool {pool_id}: {updates}")
         return self.client.put(path, updates)
         
+    def list_all_passphrases(self, pool_id: str, page_size: int = 100, **kwargs) -> List[Dict[str, Any]]:
+        """
+        Fetch all passphrases in a DPSK pool using GET with pagination.
+
+        Args:
+            pool_id: The DPSK pool ID
+            page_size: Number of items per page (default 100)
+            **kwargs: Additional query parameters
+
+        Returns:
+            Flat list of all passphrases
+        """
+        all_passphrases: list = []
+        page = 0
+        while True:
+            params = {"page": page, "size": page_size, **kwargs}
+            logger.debug(f"Listing passphrases for pool {pool_id} page {page}")
+            result = self.client.get(
+                f"/dpskServices/{pool_id}/passphrases", params=params
+            )
+            if isinstance(result, list):
+                all_passphrases.extend(result)
+                break
+            if isinstance(result, dict):
+                items = result.get("content", result.get("data", []))
+                all_passphrases.extend(items)
+                total = result.get("totalElements", result.get("totalCount", 0))
+                if len(all_passphrases) >= total or not items:
+                    break
+                page += 1
+            else:
+                break
+        return all_passphrases
+
+    def patch_passphrase(self, pool_id: str, passphrase_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Partially update an existing passphrase.
+
+        Unlike update_passphrase (PUT), this performs a partial update.
+
+        Args:
+            pool_id: The DPSK pool ID
+            passphrase_id: The passphrase ID
+            updates: Fields to update
+
+        Returns:
+            Updated passphrase details
+        """
+        path = f"/dpskServices/{pool_id}/passphrases/{passphrase_id}"
+
+        logger.debug(f"Patching passphrase {passphrase_id} in pool {pool_id}: {updates}")
+        return self.client.patch(path, updates)
+
     def delete_passphrases(self, pool_id: str, passphrase_ids: List[str]) -> None:
         """
         Delete passphrases from a DPSK pool.
-        
+
         Args:
             pool_id: The DPSK pool ID
             passphrase_ids: List of passphrase IDs to delete
         """
         path = f"/dpskServices/{pool_id}/passphrases"
-        
+
         data = {
             "passphraseIds": passphrase_ids
         }
-        
+
         logger.debug(f"Deleting {len(passphrase_ids)} passphrases from pool {pool_id}")
         self.client.delete(path, json_data=data)
         
@@ -292,6 +345,30 @@ class DPSK:
         else:
             return []
         
+    def query_devices(self, pool_id: str, passphrase_id: str, filters: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Query devices associated with a passphrase with filtering and pagination.
+
+        Args:
+            pool_id: The DPSK pool ID
+            passphrase_id: The passphrase ID
+            filters: Optional query parameters (page, pageSize, filters, etc.)
+
+        Returns:
+            Dict containing devices and pagination information
+        """
+        path = f"/dpskServices/{pool_id}/passphrases/{passphrase_id}/devices/query"
+
+        data = {}
+        if filters:
+            for key in ['page', 'pageSize', 'sortOrder', 'sortField', 'searchString',
+                       'searchTargetFields', 'fields', 'filters']:
+                if key in filters and filters[key] is not None:
+                    data[key] = filters[key]
+
+        logger.debug(f"Querying devices for passphrase {passphrase_id} in pool {pool_id}")
+        return self.client.post(path, data)
+
     def add_devices(self, pool_id: str, passphrase_id: str, devices: List[Dict[str, str]]) -> Dict[str, Any]:
         """
         Add devices to a passphrase.

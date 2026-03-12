@@ -169,3 +169,52 @@ with open("identities.csv", "rb") as f:
 ```
 
 **Returns:** `dict`
+
+---
+
+### bulk_delete(group_id, identity_ids)
+
+Bulk delete multiple identities from a group.
+
+```python
+client.identities.bulk_delete("group-uuid", ["identity-uuid-1", "identity-uuid-2"])
+```
+
+---
+
+### update_ethernet_ports(group_id, identity_id, venue_id, ethernet_ports)
+
+Update ethernet port assignments for an identity.
+
+```python
+client.identities.update_ethernet_ports(
+    "group-uuid",
+    "identity-uuid",
+    "venue-uuid",
+    [{"macAddress": "AA-BB-CC-DD-EE-FF", "portIndex": 1}]
+)
+```
+
+**Returns:** `dict`
+
+---
+
+### delete_ethernet_port(group_id, identity_id, mac_address, port_index)
+
+Delete an ethernet port assignment from an identity.
+
+```python
+client.identities.delete_ethernet_port("group-uuid", "identity-uuid", "AA-BB-CC-DD-EE-FF", 1)
+```
+
+---
+
+### retry_vni_allocation(group_id, identity_id)
+
+Retry VNI allocation for an identity that previously failed.
+
+```python
+client.identities.retry_vni_allocation("group-uuid", "identity-uuid")
+```
+
+**Returns:** `dict`

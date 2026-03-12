@@ -320,6 +320,99 @@ class Identities:
         except ResourceNotFoundError:
             raise ResourceNotFoundError(message=f"Identity {identity_id} in group {group_id} or device {mac_address} not found")
     
+    def bulk_delete(self, group_id: str, identity_ids: List[str]) -> None:
+        """
+        Bulk delete identities from an identity group.
+
+        Args:
+            group_id: ID of the identity group
+            identity_ids: List of identity ID strings to delete
+
+        Raises:
+            ResourceNotFoundError: If the identity group does not exist
+        """
+        try:
+            self.client.request(
+                'DELETE',
+                f"/identityGroups/{group_id}/identities",
+                json_data=identity_ids
+            )
+        except ResourceNotFoundError:
+            raise ResourceNotFoundError(message=f"Identity group with ID {group_id} not found")
+
+    def update_ethernet_ports(self, group_id: str, identity_id: str,
+                              venue_id: str, ethernet_ports: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Update ethernet port assignments for an identity at a venue.
+
+        Args:
+            group_id: ID of the identity group
+            identity_id: ID of the identity
+            venue_id: ID of the venue
+            ethernet_ports: List of EthernetPort objects
+
+        Returns:
+            Dict containing the updated ethernet port assignments
+
+        Raises:
+            ResourceNotFoundError: If the identity, group, or venue does not exist
+        """
+        try:
+            return self.client.put(
+                f"/identityGroups/{group_id}/identities/{identity_id}/venues/{venue_id}/ethernetPorts",
+                data=ethernet_ports
+            )
+        except ResourceNotFoundError:
+            raise ResourceNotFoundError(
+                message=f"Identity {identity_id} in group {group_id} or venue {venue_id} not found"
+            )
+
+    def delete_ethernet_port(self, group_id: str, identity_id: str,
+                             mac_address: str, port_index: int) -> None:
+        """
+        Delete an ethernet port assignment from an identity.
+
+        Args:
+            group_id: ID of the identity group
+            identity_id: ID of the identity
+            mac_address: MAC address of the switch
+            port_index: Port index to remove
+
+        Raises:
+            ResourceNotFoundError: If the identity or port does not exist
+        """
+        try:
+            self.client.delete(
+                f"/identityGroups/{group_id}/identities/{identity_id}/ethernetPorts/{mac_address}/{port_index}"
+            )
+        except ResourceNotFoundError:
+            raise ResourceNotFoundError(
+                message=f"Ethernet port {mac_address}/{port_index} for identity {identity_id} not found"
+            )
+
+    def retry_vni_allocation(self, group_id: str, identity_id: str) -> None:
+        """
+        Retry VNI allocation for an identity.
+
+        Triggers re-allocation of Virtual Network Identifiers by deleting
+        the current VNI assignments.
+
+        Args:
+            group_id: ID of the identity group
+            identity_id: ID of the identity
+
+        Raises:
+            ResourceNotFoundError: If the identity or group does not exist
+        """
+        try:
+            self.client.delete(
+                f"/identityGroups/{group_id}/identities/{identity_id}/vnis"
+            )
+        except ResourceNotFoundError:
+            raise ResourceNotFoundError(
+                message=f"Identity {identity_id} in group {group_id} not found"
+            )
+
     def export_csv(self, 
                    dpsk_pool_id: Optional[str] = None,
                    filter_params: Optional[Dict[str, Any]] = None,

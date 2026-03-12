@@ -480,34 +480,29 @@ class TestExportCsv:
 
 class TestImportCsv:
     def test_import_csv_success(self, identities):
-        identities.client.post.return_value = {"imported": 5, "failed": 0}
+        identities.client.request.return_value = {"imported": 5, "failed": 0}
         csv_data = b"name,email\nAlice,alice@test.com\n"
         result = identities.import_csv("g1", csv_data)
-        identities.client.post.assert_called_once()
-        call_args = identities.client.post.call_args
-        assert call_args[0][0] == "/identityGroups/g1/identities/csvFile"
+        identities.client.request.assert_called_once()
+        call_args = identities.client.request.call_args
+        assert call_args[0][0] == 'POST'
+        assert call_args[0][1] == "/identityGroups/g1/identities/csvFile"
         assert call_args[1]["files"]["file"][0] == "identities.csv"
         assert call_args[1]["files"]["file"][1] == csv_data
         assert call_args[1]["files"]["file"][2] == "text/csv"
         assert result["imported"] == 5
 
-    def test_import_csv_sets_content_type_header(self, identities):
-        identities.client.post.return_value = {}
-        identities.import_csv("g1", b"csv")
-        call_kwargs = identities.client.post.call_args[1]
-        assert call_kwargs["headers"]["Content-Type"] == "multipart/form-data"
-
     def test_import_csv_group_not_found(self, identities):
-        identities.client.post.side_effect = ResourceNotFoundError()
+        identities.client.request.side_effect = ResourceNotFoundError()
         with pytest.raises(ResourceNotFoundError, match="Identity group with ID g1 not found"):
             identities.import_csv("g1", b"csv")
 
     def test_import_csv_file_tuple_structure(self, identities):
         """Verify the files dict has the correct multipart tuple format."""
-        identities.client.post.return_value = {}
+        identities.client.request.return_value = {}
         csv_data = b"col1,col2\nval1,val2\n"
         identities.import_csv("g1", csv_data)
-        call_kwargs = identities.client.post.call_args[1]
+        call_kwargs = identities.client.request.call_args[1]
         file_tuple = call_kwargs["files"]["file"]
         assert len(file_tuple) == 3
         assert file_tuple[0] == "identities.csv"   # filename
@@ -617,3 +612,92 @@ class TestListAll:
         identities.list_all("g1", dpskPoolId="pool-1")
         call_params = identities.client.get.call_args[1]["params"]
         assert call_params["dpskPoolId"] == "pool-1"
+
+
+# ---------------------------------------------------------------------------
+# bulk_delete()
+# ---------------------------------------------------------------------------
+
+class TestBulkDelete:
+    def test_sends_delete_with_id_list(self, identities):
+        ids = ["id-1", "id-2", "id-3"]
+        identities.bulk_delete("g1", ids)
+        identities.client.request.assert_called_once_with(
+            'DELETE',
+            "/identityGroups/g1/identities",
+            json_data=ids,
+        )
+
+    def test_returns_none(self, identities):
+        result = identities.bulk_delete("g1", ["id-1"])
+        assert result is None
+
+    def test_group_not_found(self, identities):
+        identities.client.request.side_effect = ResourceNotFoundError()
+        with pytest.raises(ResourceNotFoundError, match="Identity group with ID g1 not found"):
+            identities.bulk_delete("g1", ["id-1"])
+
+
+# ---------------------------------------------------------------------------
+# update_ethernet_ports()
+# ---------------------------------------------------------------------------
+
+class TestUpdateEthernetPorts:
+    def test_puts_ethernet_ports(self, identities):
+        ports = [{"macAddress": "AA-BB-CC-DD-EE-FF", "portIndex": 1}]
+        identities.client.put.return_value = {"status": "ok"}
+        result = identities.update_ethernet_ports("g1", "i1", "v1", ports)
+        identities.client.put.assert_called_once_with(
+            "/identityGroups/g1/identities/i1/venues/v1/ethernetPorts",
+            data=ports,
+        )
+        assert result["status"] == "ok"
+
+    def test_not_found(self, identities):
+        identities.client.put.side_effect = ResourceNotFoundError()
+        with pytest.raises(ResourceNotFoundError, match="venue v1 not found"):
+            identities.update_ethernet_ports("g1", "i1", "v1", [])
+
+
+# ---------------------------------------------------------------------------
+# delete_ethernet_port()
+# ---------------------------------------------------------------------------
+
+class TestDeleteEthernetPort:
+    def test_deletes_correct_path(self, identities):
+        identities.delete_ethernet_port("g1", "i1", "AA-BB-CC-DD-EE-FF", 3)
+        identities.client.delete.assert_called_once_with(
+            "/identityGroups/g1/identities/i1/ethernetPorts/AA-BB-CC-DD-EE-FF/3"
+        )
+
+    def test_returns_none(self, identities):
+        identities.client.delete.return_value = None
+        result = identities.delete_ethernet_port("g1", "i1", "AA-BB-CC-DD-EE-FF", 1)
+        assert result is None
+
+    def test_not_found(self, identities):
+        identities.client.delete.side_effect = ResourceNotFoundError()
+        with pytest.raises(ResourceNotFoundError, match="Ethernet port AA-BB-CC-DD-EE-FF/3"):
+            identities.delete_ethernet_port("g1", "i1", "AA-BB-CC-DD-EE-FF", 3)
+
+
+# ---------------------------------------------------------------------------
+# retry_vni_allocation()
+# ---------------------------------------------------------------------------
+
+class TestRetryVniAllocation:
+    def test_deletes_vnis_path(self, identities):
+        identities.retry_vni_allocation("g1", "i1")
+        identities.client.delete.assert_called_once_with(
+            "/identityGroups/g1/identities/i1/vnis"
+        )
+
+    def test_returns_none(self, identities):
+        identities.client.delete.return_value = None
+        result = identities.retry_vni_allocation("g1", "i1")
+        assert result is None
+
+    def test_not_found(self, identities):
+        identities.client.delete.side_effect = ResourceNotFoundError()
+        with pytest.raises(ResourceNotFoundError, match="Identity i1 in group g1 not found"):
+            identities.retry_vni_allocation("g1", "i1")
