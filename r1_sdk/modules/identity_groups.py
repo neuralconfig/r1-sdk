@@ -175,8 +175,7 @@ class IdentityGroups:
             ResourceNotFoundError: If the identity group does not exist
         """
         try:
-            # Note: The API might use PUT or PATCH - adjust if needed
-            return self.client.put(f"/identityGroups/{group_id}", data=kwargs)
+            return self.client.patch(f"/identityGroups/{group_id}", data=kwargs)
         except ResourceNotFoundError:
             raise ResourceNotFoundError(message=f"Identity group with ID {group_id} not found")
     

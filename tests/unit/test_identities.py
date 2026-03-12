@@ -588,16 +588,32 @@ class TestEdgeCases:
 class TestListAll:
     """Tests for Identities.list_all()."""
 
-    def test_delegates_to_paginate_query(self, identities):
-        identities.client.paginate_query.return_value = [{"id": "id1"}]
+    def test_fetches_all_identities_via_get(self, identities):
+        identities.client.get.return_value = {
+            "content": [{"id": "id1"}],
+            "totalElements": 1,
+        }
         result = identities.list_all("g1")
-        identities.client.paginate_query.assert_called_once_with(
-            "/identityGroups/g1/identities/query", {}
+        identities.client.get.assert_called_once_with(
+            "/identityGroups/g1/identities",
+            params={"page": 0, "size": 100},
         )
         assert result == [{"id": "id1"}]
 
-    def test_passes_kwargs(self, identities):
-        identities.client.paginate_query.return_value = []
+    def test_paginates_multiple_pages(self, identities):
+        identities.client.get.side_effect = [
+            {"content": [{"id": "id1"}], "totalElements": 2},
+            {"content": [{"id": "id2"}], "totalElements": 2},
+        ]
+        result = identities.list_all("g1", page_size=1)
+        assert result == [{"id": "id1"}, {"id": "id2"}]
+        assert identities.client.get.call_count == 2
+
+    def test_passes_kwargs_as_params(self, identities):
+        identities.client.get.return_value = {
+            "content": [],
+            "totalElements": 0,
+        }
         identities.list_all("g1", dpskPoolId="pool-1")
-        call_data = identities.client.paginate_query.call_args[0][1]
-        assert call_data["dpskPoolId"] == "pool-1"
+        call_params = identities.client.get.call_args[1]["params"]
+        assert call_params["dpskPoolId"] == "pool-1"
