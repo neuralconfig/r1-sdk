@@ -55,6 +55,18 @@ result = client.mac_registration_pools.create("group-uuid", "Guest MACs", descri
 
 ---
 
+### create_standalone(name, **kwargs)
+
+Create a standalone MAC registration pool not associated with an identity group (async 202).
+
+```python
+result = client.mac_registration_pools.create_standalone("Standalone Pool", description="No group")
+```
+
+**Returns:** `dict` — async response with `requestId`
+
+---
+
 ### update(pool_id, **kwargs)
 
 Update a pool (v1.1 async).
@@ -76,6 +88,18 @@ result = client.mac_registration_pools.delete("pool-uuid")
 ```
 
 **Returns:** `dict` — async response with `requestId`
+
+---
+
+### get_registration(pool_id, reg_id)
+
+Get a specific registration by ID.
+
+```python
+reg = client.mac_registration_pools.get_registration("pool-uuid", "reg-uuid")
+```
+
+**Returns:** `dict`
 
 ---
 

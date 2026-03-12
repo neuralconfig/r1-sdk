@@ -462,6 +462,114 @@ class TestExportPassphrasesCsv:
 # Constructor / init
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# list_all_passphrases
+# ---------------------------------------------------------------------------
+
+class TestListAllPassphrases:
+    """Tests for DPSK.list_all_passphrases()."""
+
+    def test_single_page(self, dpsk):
+        dpsk.client.get.return_value = {
+            "content": [{"id": "pp-1"}, {"id": "pp-2"}],
+            "totalElements": 2,
+        }
+        result = dpsk.list_all_passphrases("pool-1")
+        dpsk.client.get.assert_called_once_with(
+            "/dpskServices/pool-1/passphrases",
+            params={"page": 0, "size": 100},
+        )
+        assert result == [{"id": "pp-1"}, {"id": "pp-2"}]
+
+    def test_multiple_pages(self, dpsk):
+        dpsk.client.get.side_effect = [
+            {"content": [{"id": "pp-1"}], "totalElements": 2},
+            {"content": [{"id": "pp-2"}], "totalElements": 2},
+        ]
+        result = dpsk.list_all_passphrases("pool-1", page_size=1)
+        assert result == [{"id": "pp-1"}, {"id": "pp-2"}]
+        assert dpsk.client.get.call_count == 2
+
+    def test_list_response(self, dpsk):
+        dpsk.client.get.return_value = [{"id": "pp-1"}]
+        result = dpsk.list_all_passphrases("pool-1")
+        assert result == [{"id": "pp-1"}]
+
+    def test_empty_result(self, dpsk):
+        dpsk.client.get.return_value = {"content": [], "totalElements": 0}
+        result = dpsk.list_all_passphrases("pool-1")
+        assert result == []
+
+    def test_passes_kwargs(self, dpsk):
+        dpsk.client.get.return_value = {"content": [], "totalElements": 0}
+        dpsk.list_all_passphrases("pool-1", sort="name,asc")
+        call_params = dpsk.client.get.call_args[1]["params"]
+        assert call_params["sort"] == "name,asc"
+
+
+# ---------------------------------------------------------------------------
+# patch_passphrase
+# ---------------------------------------------------------------------------
+
+class TestPatchPassphrase:
+    """Tests for DPSK.patch_passphrase()."""
+
+    def test_patches_with_updates(self, dpsk):
+        updates = {"userName": "new-name"}
+        dpsk.client.patch.return_value = {"id": "pp-1", "userName": "new-name"}
+        result = dpsk.patch_passphrase("pool-1", "pp-1", updates)
+        dpsk.client.patch.assert_called_once_with(
+            "/dpskServices/pool-1/passphrases/pp-1", updates
+        )
+        assert result["userName"] == "new-name"
+
+    def test_returns_api_response(self, dpsk):
+        expected = {"id": "pp-1", "status": "updated"}
+        dpsk.client.patch.return_value = expected
+        result = dpsk.patch_passphrase("pool-1", "pp-1", {"status": "active"})
+        assert result == expected
+
+
+# ---------------------------------------------------------------------------
+# query_devices
+# ---------------------------------------------------------------------------
+
+class TestQueryDevices:
+    """Tests for DPSK.query_devices()."""
+
+    def test_no_filters(self, dpsk):
+        dpsk.client.post.return_value = {"data": [], "totalCount": 0}
+        result = dpsk.query_devices("pool-1", "pp-1")
+        dpsk.client.post.assert_called_once_with(
+            "/dpskServices/pool-1/passphrases/pp-1/devices/query", {}
+        )
+        assert result == {"data": [], "totalCount": 0}
+
+    def test_with_filters(self, dpsk):
+        filters = {"page": 0, "pageSize": 50, "searchString": "laptop"}
+        dpsk.client.post.return_value = {"data": [{"mac": "AA:BB:CC:DD:EE:FF"}]}
+        dpsk.query_devices("pool-1", "pp-1", filters=filters)
+        dpsk.client.post.assert_called_once_with(
+            "/dpskServices/pool-1/passphrases/pp-1/devices/query", filters
+        )
+
+    def test_filters_ignores_unknown_keys(self, dpsk):
+        filters = {"page": 0, "bogus": "nope"}
+        dpsk.client.post.return_value = {"data": []}
+        dpsk.query_devices("pool-1", "pp-1", filters=filters)
+        dpsk.client.post.assert_called_once_with(
+            "/dpskServices/pool-1/passphrases/pp-1/devices/query", {"page": 0}
+        )
+
+    def test_filters_skips_none_values(self, dpsk):
+        filters = {"page": 0, "sortOrder": None}
+        dpsk.client.post.return_value = {"data": []}
+        dpsk.query_devices("pool-1", "pp-1", filters=filters)
+        dpsk.client.post.assert_called_once_with(
+            "/dpskServices/pool-1/passphrases/pp-1/devices/query", {"page": 0}
+        )
+
+
 class TestInit:
     """Tests for DPSK.__init__()."""
 

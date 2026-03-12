@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.5.2] - 2026-03-12
+
+### Added
+- **DPSK:** `list_all_passphrases()`, `patch_passphrase()`, `query_devices()` (3 methods)
+- **IdentityGroups:** `export_csv()`, `remove_policy_set()`, `associate_mac_pool()` (3 methods)
+- **Identities:** `bulk_delete()`, `update_ethernet_ports()`, `delete_ethernet_port()`, `retry_vni_allocation()` (4 methods)
+- **MacRegistrationPools:** `create_standalone()`, `get_registration()` (2 methods)
+- **WiFiNetworks:** `activate_mac_pool()`, `deactivate_mac_pool()` (2 methods)
+- New test file: `test_mac_registration_pools.py` (comprehensive coverage for all 17 methods)
+- `docs/non-spec-endpoints.md` — tracking document for SDK methods calling endpoints not in the OpenAPI spec
+
+### Fixed
+- API coverage table — corrected all 20 rows with verified spec/SDK operation counts
+- `test_identities.py` — fixed `import_csv` tests to use `client.request()` instead of `client.post()`
+- `test_imports.py` — version assertion updated
+
 ## [0.5.1] - 2026-03-12
 
 ### Added

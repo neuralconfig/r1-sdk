@@ -119,3 +119,38 @@ client.identity_groups.associate_policy_set("group-uuid", "policy-set-uuid")
 ```
 
 **Returns:** `dict`
+
+---
+
+### remove_policy_set(group_id, policy_set_id)
+
+Remove a policy set association from an identity group.
+
+```python
+client.identity_groups.remove_policy_set("group-uuid", "policy-set-uuid")
+```
+
+---
+
+### associate_mac_pool(group_id, pool_id)
+
+Associate a MAC registration pool with an identity group.
+
+```python
+client.identity_groups.associate_mac_pool("group-uuid", "pool-uuid")
+```
+
+**Returns:** `dict`
+
+---
+
+### export_csv(filters=None, **kwargs)
+
+Export identity groups to CSV.
+
+```python
+csv_bytes = client.identity_groups.export_csv()
+csv_bytes = client.identity_groups.export_csv(filters={"dpsk_pool_id": "pool-uuid"})
+```
+
+**Returns:** `bytes`

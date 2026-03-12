@@ -404,3 +404,30 @@ class WiFiNetworks:
 
         logger.debug(f"Associating DPSK service {dpsk_service_id} with WiFi network {wlan_id}")
         return self.client.put(path, {})
+
+    def activate_mac_pool(self, wlan_id: str, pool_id: str) -> Dict[str, Any]:
+        """
+        Activate a MAC registration pool on a WiFi network.
+
+        Args:
+            wlan_id: The WiFi network ID
+            pool_id: The MAC registration pool ID
+
+        Returns:
+            Activation response
+        """
+        path = f"/wifiNetworks/{wlan_id}/macRegistrationPools/{pool_id}"
+        logger.debug(f"Activating MAC pool {pool_id} on WiFi network {wlan_id}")
+        return self.client.put(path, {})
+
+    def deactivate_mac_pool(self, wlan_id: str, pool_id: str) -> None:
+        """
+        Deactivate a MAC registration pool from a WiFi network.
+
+        Args:
+            wlan_id: The WiFi network ID
+            pool_id: The MAC registration pool ID
+        """
+        path = f"/wifiNetworks/{wlan_id}/macRegistrationPools/{pool_id}"
+        logger.debug(f"Deactivating MAC pool {pool_id} from WiFi network {wlan_id}")
+        self.client.delete(path)
