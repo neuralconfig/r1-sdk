@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.3] - 2026-03-12
+
+### Fixed
+- `paginate_query()` now handles both standard (`data`/`totalCount`) and Spring-style (`content`/`totalElements`) pagination response formats
+- `Identities.list_all()` uses GET endpoint with `page`/`size` params instead of non-existent POST `/query` endpoint
+- `IdentityGroups.update()` uses PATCH instead of PUT (fixes 405 error)
+
 ## [0.4.2] - 2026-03-10
 
 ### Added
