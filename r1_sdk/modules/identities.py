@@ -107,10 +107,20 @@ class Identities:
             logger.exception(f"Error querying identities: {str(e)}")
             raise
     
-    def list_all(self, group_id: str, **kwargs) -> List[Dict[str, Any]]:
+    def list_all(self, group_id: str, page_size: int = 100, **kwargs) -> List[Dict[str, Any]]:
         """Fetch all identities in a group using auto-pagination. Returns flat list."""
-        query_data = dict(kwargs)
-        return self.client.paginate_query(f"/identityGroups/{group_id}/identities/query", query_data)
+        all_data: list = []
+        page = 0
+        while True:
+            params = {"page": page, "size": page_size, **kwargs}
+            result = self.client.get(f"/identityGroups/{group_id}/identities", params=params)
+            items = result.get("content", []) if isinstance(result, dict) else []
+            all_data.extend(items)
+            total = result.get("totalElements", 0) if isinstance(result, dict) else 0
+            if len(all_data) >= total or not items:
+                break
+            page += 1
+        return all_data
 
     def create(self, group_id: str,
                name: str,

@@ -242,16 +242,22 @@ class R1Client:
         return self.request('DELETE', path, **kwargs)
 
     def paginate_query(self, path: str, query_data: Optional[Dict[str, Any]] = None, page_size: int = 100) -> list:
-        """Auto-paginate a POST /query endpoint. Returns list of all items."""
+        """Auto-paginate a POST /query endpoint. Returns list of all items.
+
+        Handles two R1 API pagination formats:
+        - Standard: {"data": [...], "totalCount": N, "page": N}
+        - Spring-style: {"content": [...], "totalElements": N, "number": N}
+        """
         all_data: list = []
         page = 0
         base_query = dict(query_data or {})
         while True:
             q = {**base_query, "pageSize": page_size, "page": page, "sortOrder": "ASC"}
             result = self.post(path, data=q)
-            items = result.get("data", [])
+            # Handle both response formats
+            items = result.get("data") or result.get("content") or []
             all_data.extend(items)
-            total = result.get("total", 0)
+            total = result.get("totalCount") or result.get("totalElements") or result.get("total") or 0
             if len(all_data) >= total or not items:
                 break
             page += 1

@@ -233,34 +233,34 @@ class TestCreate:
 
 class TestUpdate:
     def test_puts_with_group_id(self, identity_groups):
-        identity_groups.client.put.return_value = {"id": "g1"}
+        identity_groups.client.patch.return_value = {"id": "g1"}
         identity_groups.update("g1", name="Renamed")
-        identity_groups.client.put.assert_called_once_with(
+        identity_groups.client.patch.assert_called_once_with(
             "/identityGroups/g1",
             data={"name": "Renamed"},
         )
 
     def test_forwards_all_kwargs(self, identity_groups):
-        identity_groups.client.put.return_value = {}
+        identity_groups.client.patch.return_value = {}
         identity_groups.update("g1", name="New", description="Desc", custom="val")
-        call_data = identity_groups.client.put.call_args[1]["data"]
+        call_data = identity_groups.client.patch.call_args[1]["data"]
         assert call_data == {"name": "New", "description": "Desc", "custom": "val"}
 
     def test_returns_updated_group(self, identity_groups):
         expected = {"id": "g1", "name": "Renamed"}
-        identity_groups.client.put.return_value = expected
+        identity_groups.client.patch.return_value = expected
         assert identity_groups.update("g1", name="Renamed") == expected
 
     def test_raises_resource_not_found_on_404(self, identity_groups):
-        identity_groups.client.put.side_effect = ResourceNotFoundError()
+        identity_groups.client.patch.side_effect = ResourceNotFoundError()
         with pytest.raises(ResourceNotFoundError) as exc_info:
             identity_groups.update("missing", name="x")
         assert "missing" in str(exc_info.value)
 
     def test_empty_kwargs_sends_empty_dict(self, identity_groups):
-        identity_groups.client.put.return_value = {}
+        identity_groups.client.patch.return_value = {}
         identity_groups.update("g1")
-        call_data = identity_groups.client.put.call_args[1]["data"]
+        call_data = identity_groups.client.patch.call_args[1]["data"]
         assert call_data == {}
 
 
